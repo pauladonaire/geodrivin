@@ -161,7 +161,7 @@ const Drivin = (() => {
         if (intento > 0) await new Promise(r => setTimeout(r, 3000));
         try {
           const r = await fetch(`${DRIVIN_BASE_URL}/addresses`, {
-            method: 'PUT',
+            method: 'POST',
             headers: {
               'X-API-Key': DRIVIN_API_KEY,
               'Content-Type': 'application/json'
