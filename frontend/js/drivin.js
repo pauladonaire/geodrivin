@@ -31,21 +31,21 @@ async function getDepositosConfig() {
 
 // ── Asignar depósito a una dirección ──
 function asignarDeposito(addr, depositos) {
-  const zip  = (addr.zip_code || '').toString().trim();
-  const city = normalizar(addr.city);
+  const zip      = (addr.zip_code || '').toString().trim();
+  const province = normalizar(addr.state);  // clasificar por provincia (state)
 
-  // Prioridad 1: código postal exacto
+  // Prioridad 1: código postal exacto (incluye codigos_postales_extra)
   for (const dep of depositos) {
     const { codigos_postales = [], codigos_postales_extra = [] } = dep.reglas;
     const todos = [...codigos_postales, ...codigos_postales_extra];
     if (zip && todos.length > 0 && todos.includes(zip)) return dep.id;
   }
 
-  // Prioridad 2: ciudad (con exclusión de CP)
+  // Prioridad 2: provincia (state), con exclusión de CP
   for (const dep of depositos) {
-    const { ciudades = [], excluir_codigos_postales = [] } = dep.reglas;
-    const ciudadesNorm = ciudades.map(normalizar);
-    if (ciudadesNorm.includes(city)) {
+    const { provincias = [], excluir_codigos_postales = [] } = dep.reglas;
+    const provinciasNorm = provincias.map(normalizar);
+    if (province && provinciasNorm.includes(province)) {
       if (excluir_codigos_postales.length > 0 && zip && excluir_codigos_postales.includes(zip)) continue;
       return dep.id;
     }

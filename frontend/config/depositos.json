@@ -5,7 +5,13 @@
       "nombre": "CND Buenos Aires",
       "color": "#01feff",
       "reglas": {
-        "ciudades": ["Buenos Aires", "CABA", "Avellaneda", "Lanús", "Lanus", "Lomas de Zamora", "Quilmes", "Berazategui", "Florencio Varela", "Almirante Brown", "Esteban Echeverría", "Esteban Echeverria"],
+        "provincias": [
+          "Buenos Aires",
+          "Ciudad Autónoma de Buenos Aires",
+          "Ciudad Autonoma de Buenos Aires",
+          "CABA",
+          "GBA"
+        ],
         "codigos_postales": [],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
@@ -16,10 +22,16 @@
       "nombre": "CND Mendoza",
       "color": "#004993",
       "reglas": {
-        "ciudades": ["Mendoza", "Godoy Cruz", "Guaymallén", "Guaymallen", "Las Heras", "Maipú", "Maipu", "Luján de Cuyo", "Lujan de Cuyo"],
+        "provincias": [
+          "Mendoza"
+        ],
         "codigos_postales": [],
         "codigos_postales_extra": ["5435", "5427"],
-        "excluir_codigos_postales": ["5600", "5620", "5613", "5602", "5604", "5612", "5570", "5584", "5585", "5573", "5577", "5579", "5590", "5582", "5589", "5560", "5561", "5567", "5565"]
+        "excluir_codigos_postales": [
+          "5600", "5620", "5613", "5602", "5604", "5612",
+          "5570", "5584", "5585", "5573", "5577", "5579", "5590", "5582", "5589",
+          "5560", "5561", "5567", "5565"
+        ]
       }
     },
     {
@@ -27,7 +39,7 @@
       "nombre": "CND Sur Mendoza",
       "color": "#003481",
       "reglas": {
-        "ciudades": [],
+        "provincias": [],
         "codigos_postales": ["5600", "5620", "5613", "5602", "5604", "5612"],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
@@ -38,7 +50,7 @@
       "nombre": "CND San Martín",
       "color": "#185FA5",
       "reglas": {
-        "ciudades": [],
+        "provincias": [],
         "codigos_postales": ["5570", "5584", "5585", "5573", "5577", "5579", "5590", "5582", "5589"],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
@@ -49,7 +61,7 @@
       "nombre": "CND Tunuyán",
       "color": "#0F6E56",
       "reglas": {
-        "ciudades": [],
+        "provincias": [],
         "codigos_postales": ["5560", "5561", "5567", "5565"],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
@@ -60,7 +72,10 @@
       "nombre": "CND Córdoba",
       "color": "#BA7517",
       "reglas": {
-        "ciudades": ["Córdoba", "Cordoba", "Villa Carlos Paz", "Río Cuarto", "Rio Cuarto", "Villa María", "Villa Maria"],
+        "provincias": [
+          "Córdoba",
+          "Cordoba"
+        ],
         "codigos_postales": [],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
@@ -71,7 +86,12 @@
       "nombre": "CND Neuquén",
       "color": "#993556",
       "reglas": {
-        "ciudades": ["Neuquén", "Neuquen", "Cipolletti", "Plottier"],
+        "provincias": [
+          "Neuquén",
+          "Neuquen",
+          "Río Negro",
+          "Rio Negro"
+        ],
         "codigos_postales": [],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
