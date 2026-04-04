@@ -108,10 +108,11 @@ const Drivin = (() => {
 
     const addresses = allAddresses;
 
+    // Limpiar cache anterior antes de guardar (evita acumulación de datos viejos pesados)
+    localStorage.removeItem(CACHE_KEY);
+
     const corregidas = new Set(getCorregidas().map(c => c.code));
-    const cacheActual = getCache();
     const cacheMap = {};
-    cacheActual.forEach(c => { cacheMap[c.code] = c; });
 
     for (const addr of addresses) {
       const depositoId = asignarDeposito(addr, depositos);
@@ -128,9 +129,29 @@ const Drivin = (() => {
         estado = 'sin_coords';
       }
 
+      // Solo guardamos los campos necesarios para reducir tamaño en localStorage
       cacheMap[addr.code] = {
         code: addr.code,
-        datos: addr,
+        datos: {
+          code:               addr.code,
+          name:               addr.name               || null,
+          client:             addr.client             || null,
+          address1:           addr.address1           || null,
+          address2:           addr.address2           || null,
+          city:               addr.city               || null,
+          state:              addr.state              || null,
+          zip_code:           addr.zip_code           || null,
+          country:            addr.country            || 'Argentina',
+          lat:                addr.lat                || null,
+          lng:                addr.lng                || null,
+          dispatch_date:      addr.dispatch_date      || null,
+          address_type:       addr.address_type       || null,
+          phone:              addr.phone              || null,
+          email:              addr.email              || null,
+          service_time:       addr.service_time       || null,
+          time_window_start:  addr.time_window_start  || null,
+          time_window_end:    addr.time_window_end    || null,
+        },
         deposito_id: depositoId,
         estado,
         ultima_actualizacion: new Date().toISOString()
