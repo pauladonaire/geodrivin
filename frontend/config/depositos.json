@@ -1,0 +1,81 @@
+{
+  "depositos": [
+    {
+      "id": "cnd_bsas",
+      "nombre": "CND Buenos Aires",
+      "color": "#01feff",
+      "reglas": {
+        "ciudades": ["Buenos Aires", "CABA", "Avellaneda", "Lanús", "Lanus", "Lomas de Zamora", "Quilmes", "Berazategui", "Florencio Varela", "Almirante Brown", "Esteban Echeverría", "Esteban Echeverria"],
+        "codigos_postales": [],
+        "codigos_postales_extra": [],
+        "excluir_codigos_postales": []
+      }
+    },
+    {
+      "id": "cnd_mendoza",
+      "nombre": "CND Mendoza",
+      "color": "#004993",
+      "reglas": {
+        "ciudades": ["Mendoza", "Godoy Cruz", "Guaymallén", "Guaymallen", "Las Heras", "Maipú", "Maipu", "Luján de Cuyo", "Lujan de Cuyo"],
+        "codigos_postales": [],
+        "codigos_postales_extra": ["5435", "5427"],
+        "excluir_codigos_postales": ["5600", "5620", "5613", "5602", "5604", "5612", "5570", "5584", "5585", "5573", "5577", "5579", "5590", "5582", "5589", "5560", "5561", "5567", "5565"]
+      }
+    },
+    {
+      "id": "cnd_surmen",
+      "nombre": "CND Sur Mendoza",
+      "color": "#003481",
+      "reglas": {
+        "ciudades": [],
+        "codigos_postales": ["5600", "5620", "5613", "5602", "5604", "5612"],
+        "codigos_postales_extra": [],
+        "excluir_codigos_postales": []
+      }
+    },
+    {
+      "id": "cnd_sanmartin",
+      "nombre": "CND San Martín",
+      "color": "#185FA5",
+      "reglas": {
+        "ciudades": [],
+        "codigos_postales": ["5570", "5584", "5585", "5573", "5577", "5579", "5590", "5582", "5589"],
+        "codigos_postales_extra": [],
+        "excluir_codigos_postales": []
+      }
+    },
+    {
+      "id": "cnd_tunuyan",
+      "nombre": "CND Tunuyán",
+      "color": "#0F6E56",
+      "reglas": {
+        "ciudades": [],
+        "codigos_postales": ["5560", "5561", "5567", "5565"],
+        "codigos_postales_extra": [],
+        "excluir_codigos_postales": []
+      }
+    },
+    {
+      "id": "cnd_cordoba",
+      "nombre": "CND Córdoba",
+      "color": "#BA7517",
+      "reglas": {
+        "ciudades": ["Córdoba", "Cordoba", "Villa Carlos Paz", "Río Cuarto", "Rio Cuarto", "Villa María", "Villa Maria"],
+        "codigos_postales": [],
+        "codigos_postales_extra": [],
+        "excluir_codigos_postales": []
+      }
+    },
+    {
+      "id": "cnd_neuquen",
+      "nombre": "CND Neuquén",
+      "color": "#993556",
+      "reglas": {
+        "ciudades": ["Neuquén", "Neuquen", "Cipolletti", "Plottier"],
+        "codigos_postales": [],
+        "codigos_postales_extra": [],
+        "excluir_codigos_postales": []
+      }
+    }
+  ]
+}

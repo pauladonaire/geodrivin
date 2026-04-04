@@ -1,0 +1,291 @@
+/* ============================================================
+   ANDESMAR GEO — main.css
+   Variables globales, reset, tipografía, utilidades
+   ============================================================ */
+
+:root {
+  --bg-dark:      #1E2733;
+  --blue-corp:    #004993;
+  --blue-dark:    #003481;
+  --cyan:         #01feff;
+  --white:        #FFFFFF;
+  --black:        #000000;
+
+  --estado-sin-coords:   #F59E0B;
+  --estado-coords-aprox: #EAB308;
+  --estado-corregida:    #22C55E;
+  --estado-error:        #EF4444;
+  --estado-sin-asignar:  #6B7280;
+
+  --border-color: rgba(255,255,255,0.08);
+  --border-radius: 6px;
+  --font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--bg-dark);
+  color: var(--white);
+  min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  outline: none;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* ── Botones ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  font-size: 13px;
+  font-weight: 500;
+  transition: background 0.15s, opacity 0.15s;
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background: var(--blue-corp);
+  color: var(--white);
+}
+.btn-primary:hover { background: var(--blue-dark); }
+
+.btn-cyan {
+  background: var(--cyan);
+  color: var(--black);
+  font-weight: 600;
+}
+.btn-cyan:hover { opacity: 0.85; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--white);
+  border: 0.5px solid var(--border-color);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.06); }
+
+.btn-danger {
+  background: #7f1d1d;
+  color: var(--white);
+}
+.btn-danger:hover { background: #991b1b; }
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ── Badges ── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.badge-cyan    { background: rgba(1,254,255,0.15); color: var(--cyan); }
+.badge-orange  { background: rgba(245,158,11,0.2); color: #F59E0B; }
+.badge-green   { background: rgba(34,197,94,0.2);  color: #22C55E; }
+.badge-red     { background: rgba(239,68,68,0.2);  color: #EF4444; }
+.badge-yellow  { background: rgba(234,179,8,0.2);  color: #EAB308; }
+.badge-gray    { background: rgba(107,114,128,0.2); color: #9CA3AF; }
+.badge-blue    { background: rgba(0,73,147,0.4);   color: #93C5FD; }
+
+/* ── Inputs y Selects ── */
+.form-input, .form-select {
+  width: 100%;
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid var(--border-color);
+  border-radius: var(--border-radius);
+  color: var(--white);
+  padding: 8px 12px;
+  font-size: 13px;
+  transition: border-color 0.15s;
+}
+
+.form-input:focus, .form-select:focus {
+  outline: none;
+  border-color: var(--cyan);
+  background: rgba(255,255,255,0.08);
+}
+
+.form-input::placeholder { color: rgba(255,255,255,0.35); }
+
+.form-select option {
+  background: var(--bg-dark);
+  color: var(--white);
+}
+
+/* ── Labels ── */
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── Cards ── */
+.card {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 16px;
+}
+
+/* ── Modales ── */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal {
+  background: #1a2332;
+  border: 0.5px solid var(--border-color);
+  border-radius: 8px;
+  width: 90vw;
+  max-width: 1100px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 0.5px solid var(--border-color);
+  background: var(--blue-dark);
+}
+
+.modal-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+.modal-close {
+  background: transparent;
+  color: rgba(255,255,255,0.6);
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.modal-close:hover {
+  color: var(--white);
+  background: rgba(255,255,255,0.1);
+}
+
+.modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 0.5px solid var(--border-color);
+}
+
+/* ── Spinner / Loader ── */
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255,255,255,0.1);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loader-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px;
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+}
+
+/* ── Utilidades ── */
+.text-cyan   { color: var(--cyan); }
+.text-muted  { color: rgba(255,255,255,0.45); }
+.text-sm     { font-size: 12px; }
+.text-xs     { font-size: 11px; }
+.text-bold   { font-weight: 600; }
+.d-flex      { display: flex; }
+.align-center { align-items: center; }
+.gap-8       { gap: 8px; }
+.gap-12      { gap: 12px; }
+.mt-8        { margin-top: 8px; }
+.mt-16       { margin-top: 16px; }
+.mb-8        { margin-bottom: 8px; }
+.mb-16       { margin-bottom: 16px; }
+.w-full      { width: 100%; }
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }

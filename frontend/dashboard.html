@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — Direcciones Pendientes | Andesmar</title>
+
+  <!-- CSS propio -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/components.css" />
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+
+<!-- ╔══════════════════════════════════════════════════════════╗ -->
+<!-- ║                     LAYOUT PRINCIPAL                      ║ -->
+<!-- ╚══════════════════════════════════════════════════════════╝ -->
+<div class="dashboard-layout">
+
+  <!-- ── TOPBAR ── -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="btn-hamburger" id="btn-hamburger" aria-label="Menú">&#9776;</button>
+      <div class="topbar-logo">
+        <img src="assets/logo_andesmar.png" alt="Andesmar"
+             onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='block';" />
+        <span id="logo-fallback" style="display:none;" class="topbar-logo-fallback">ANDESMAR</span>
+      </div>
+      <div class="topbar-title-group">
+        <span class="topbar-title">DIRECCIONES PENDIENTES</span>
+        <span class="topbar-subtitle">Sistema de georeferenciación</span>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="topbar-deposito-badge">
+        <span class="topbar-deposito-name" id="topbar-deposito-name">—</span>
+        <span class="topbar-username" id="topbar-username">—</span>
+      </div>
+      <div class="topbar-separator"></div>
+      <button class="btn btn-ghost btn-sm" id="btn-refresh-drivin" title="Actualizar datos desde Driv.in">
+        &#8635; Actualizar
+      </button>
+      <button class="btn btn-ghost btn-sm" id="btn-logout">
+        &#x2715; Salir
+      </button>
+    </div>
+  </header>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-inner">
+
+      <!-- Depósitos -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Depósitos</div>
+        <div id="depositos-list">
+          <div class="loader-overlay" style="padding:16px;">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filtros de fecha -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Filtrar por fecha</div>
+        <div class="date-filters">
+          <div>
+            <label class="form-label">Desde</label>
+            <input type="date" class="form-input" id="filter-desde" />
+          </div>
+          <div>
+            <label class="form-label">Hasta</label>
+            <input type="date" class="form-input" id="filter-hasta" />
+          </div>
+          <button class="btn btn-ghost btn-sm w-full" id="btn-clear-dates">Limpiar fechas</button>
+        </div>
+      </div>
+
+      <!-- Acciones masivas -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Acciones masivas</div>
+        <div class="sidebar-actions">
+          <button class="btn btn-ghost btn-sm" id="btn-export-sel">
+            &#8595; Exportar selección
+          </button>
+          <button class="btn btn-primary btn-sm" id="btn-send-sel">
+            &#8593; Enviar selección a Driv.in
+          </button>
+        </div>
+      </div>
+
+      <!-- Sección fijas -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Mis lugares</div>
+        <button class="sidebar-fijas-btn" id="btn-show-fijas">
+          &#9733; Direcciones fijas
+        </button>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- ── MAIN CONTENT ── -->
+  <main class="main-content" id="main-content">
+    <div class="main-inner">
+
+      <!-- ─── Vista: TABLA PRINCIPAL ─── -->
+      <div id="view-table" class="view-panel">
+
+        <!-- Métricas -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Total depósito</div>
+            <div class="metric-value" id="metric-total">—</div>
+            <div class="metric-sub" id="metric-total-sub">pendientes</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Coords aproximadas</div>
+            <div class="metric-value yellow" id="metric-aprox">—</div>
+            <div class="metric-sub">lat/lng no verificadas</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Sin coordenadas</div>
+            <div class="metric-value orange" id="metric-sin-coords">—</div>
+            <div class="metric-sub">necesitan georef.</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Corregidas hoy</div>
+            <div class="metric-value green" id="metric-hoy">—</div>
+            <div class="metric-sub">enviadas a Driv.in</div>
+          </div>
+        </div>
+
+        <!-- Barra de filtros -->
+        <div class="filters-bar">
+          <input type="text" class="form-input filter-search" id="filter-search"
+                 placeholder="Buscar por código, nombre, dirección, cliente..." />
+          <select class="form-select" id="filter-estado" style="max-width:180px;">
+            <option value="all">Todos los estados</option>
+            <option value="sin_coords">Sin coordenadas</option>
+            <option value="coords_aprox">Coords aproximadas</option>
+            <option value="corregida">Corregida</option>
+            <option value="error_envio">Error al enviar</option>
+          </select>
+          <select class="form-select" id="filter-cliente" style="max-width:160px;">
+            <option value="all">Todos los clientes</option>
+          </select>
+          <div class="filters-bar-actions">
+            <button class="btn btn-ghost btn-sm" id="btn-guardar-fija-header">
+              &#9733; Guardar fija
+            </button>
+            <button class="btn btn-primary btn-sm" id="btn-aplicar-fija-sel">
+              Aplicar fija a sel.
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabla -->
+        <div class="table-wrapper">
+          <div class="table-header-bar">
+            <span id="table-count-info">Cargando...</span>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;">
+                <input type="checkbox" id="chk-solo-sel" />
+                Solo seleccionados
+              </label>
+            </div>
+          </div>
+
+          <div class="table-scroll" id="table-scroll">
+            <div id="table-loader" class="loader-overlay">
+              <div class="spinner"></div>
+              <span>Cargando direcciones...</span>
+            </div>
+            <table id="main-table" style="display:none;">
+              <thead>
+                <tr>
+                  <th class="col-check"><input type="checkbox" id="chk-all" /></th>
+                  <th>Código</th>
+                  <th>Nombre / Cliente</th>
+                  <th>Dirección</th>
+                  <th>Ciudad</th>
+                  <th>CP</th>
+                  <th>Lat / Lng</th>
+                  <th>Dispatch date</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="table-body"></tbody>
+            </table>
+            <div id="table-empty" class="empty-state" style="display:none;">
+              <div class="empty-state-icon">&#128274;</div>
+              <div class="empty-state-title">Sin resultados</div>
+              <div class="empty-state-msg">No hay direcciones que coincidan con los filtros aplicados.</div>
+            </div>
+          </div>
+
+          <div class="pagination" id="pagination"></div>
+        </div>
+
+      </div><!-- /view-table -->
+
+      <!-- ─── Vista: DIRECCIONES FIJAS ─── -->
+      <div id="view-fijas" class="view-panel" style="display:none;">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <div>
+            <h2 style="font-size:16px; font-weight:600;">Direcciones Fijas</h2>
+            <p class="text-muted text-sm">Lugares frecuentes guardados para reutilizar.</p>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-ghost btn-sm" id="btn-back-to-table">&#8592; Volver</button>
+            <button class="btn btn-primary btn-sm" id="btn-nueva-fija">+ Nueva dirección fija</button>
+          </div>
+        </div>
+
+        <div class="table-wrapper">
+          <div class="table-scroll">
+            <table class="fijas-table" id="fijas-table-el">
+              <thead>
+                <tr>
+                  <th>Nombre referencia</th>
+                  <th>Dirección</th>
+                  <th>Ciudad</th>
+                  <th>CP</th>
+                  <th>Lat</th>
+                  <th>Lng</th>
+                  <th>Veces usada</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="fijas-tbody"></tbody>
+            </table>
+            <div id="fijas-empty" class="empty-state" style="display:none;">
+              <div class="empty-state-icon">&#9734;</div>
+              <div class="empty-state-title">Sin direcciones fijas</div>
+              <div class="empty-state-msg">Guardá direcciones desde el modal de georeferenciación.</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /view-fijas -->
+
+    </div><!-- /main-inner -->
+  </main><!-- /main-content -->
+
+</div><!-- /dashboard-layout -->
+
+
+<!-- ══════════════════════════════════════════════════════════
+     MODALES
+══════════════════════════════════════════════════════════ -->
+
+<!-- Modal: Georeferenciación -->
+<div class="modal-overlay" id="modal-geo" role="dialog" aria-modal="true" aria-labelledby="modal-geo-title">
+  <div class="modal" style="max-width:1100px;">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-geo-title">Georeferenciación</span>
+      <button class="modal-close" id="modal-geo-close" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <div class="modal-body" style="padding:0;">
+      <div class="geo-modal-body">
+
+        <!-- Panel izquierdo: datos originales -->
+        <div class="geo-panel-left" style="padding:20px; border-right:0.5px solid var(--border-color);">
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.35); margin-bottom:12px;">
+            Datos originales (Driv.in)
+          </div>
+
+          <div class="geo-field-group">
+            <div class="geo-field">
+              <div class="geo-field-label">Código</div>
+              <div class="geo-field-value" id="geo-code">—</div>
+            </div>
+            <div class="geo-field">
+              <div class="geo-field-label">CP</div>
+              <div class="geo-field-value" id="geo-zip">—</div>
+            </div>
+          </div>
+
+          <div class="geo-field">
+            <div class="geo-field-label">Nombre</div>
+            <div class="geo-field-value" id="geo-name">—</div>
+          </div>
+
+          <div class="geo-field">
+            <div class="geo-field-label">Cliente</div>
+            <div class="geo-field-value" id="geo-client">—</div>
+          </div>
+
+          <div class="geo-field">
+            <div class="geo-field-label">Dirección</div>
+            <div class="geo-field-value" id="geo-address1">—</div>
+          </div>
+
+          <div class="geo-field-group">
+            <div class="geo-field">
+              <div class="geo-field-label">Ciudad</div>
+              <div class="geo-field-value" id="geo-city">—</div>
+            </div>
+            <div class="geo-field">
+              <div class="geo-field-label">Provincia</div>
+              <div class="geo-field-value" id="geo-state">—</div>
+            </div>
+          </div>
+
+          <div class="geo-field">
+            <div class="geo-field-label">Coordenadas actuales</div>
+            <div class="geo-field-value" id="geo-coords-original">—</div>
+          </div>
+
+          <div class="geo-field">
+            <div class="geo-field-label">Observación (se enviará)</div>
+            <div class="geo-field-value text-muted text-sm" id="geo-obs-preview" style="font-style:italic;">—</div>
+          </div>
+
+        </div><!-- /panel izquierdo -->
+
+        <!-- Panel derecho: buscador + mapa -->
+        <div class="geo-panel-right" style="padding:20px;">
+          <div class="autocomplete-wrapper">
+            <label class="form-label">Buscar dirección</label>
+            <input type="text" class="form-input" id="geo-search-input"
+                   placeholder="Ej: Av. San Martín 1234, Mendoza" autocomplete="off" />
+            <div class="autocomplete-list" id="geo-autocomplete"></div>
+          </div>
+
+          <div style="position:relative; flex:1; min-height:280px;">
+            <div id="geo-map"></div>
+          </div>
+
+          <div class="coords-result">
+            <div class="coord-box">
+              <div class="coord-box-label">Latitud</div>
+              <div class="coord-box-value" id="result-lat">—</div>
+            </div>
+            <div class="coord-box">
+              <div class="coord-box-label">Longitud</div>
+              <div class="coord-box-value" id="result-lng">—</div>
+            </div>
+            <div class="coord-box">
+              <div class="coord-box-label">Precisión</div>
+              <div class="coord-box-value" id="result-precision" style="font-size:11px;">—</div>
+            </div>
+          </div>
+
+        </div><!-- /panel derecho -->
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-geo-guardar-fija">&#9733; Guardar como fija</button>
+      <button class="btn btn-ghost" id="btn-geo-cancelar">Cancelar</button>
+      <button class="btn btn-cyan" id="btn-geo-enviar" disabled>&#8593; Enviar a Driv.in</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal: Solo ver mapa (coords aprox) -->
+<div class="modal-overlay" id="modal-mapa" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:700px;">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-mapa-title">Ver ubicación aproximada</span>
+      <button class="modal-close" id="modal-mapa-close">&#10005;</button>
+    </div>
+    <div class="modal-body" style="padding:16px;">
+      <div id="view-only-map" style="height:400px; border-radius:6px;"></div>
+      <div style="margin-top:12px; font-size:12px; color:rgba(255,255,255,0.5);">
+        Las coordenadas son aproximadas (<code>georeferenced=false</code> en Driv.in).
+        Hacé clic en "Corregir" para ajustarlas.
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-mapa-cerrar">Cerrar</button>
+      <button class="btn btn-primary" id="btn-mapa-corregir">Corregir &#8594;</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal: Nueva dirección fija -->
+<div class="modal-overlay" id="modal-nueva-fija" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <span class="modal-title">Guardar dirección fija</span>
+      <button class="modal-close" id="modal-nueva-fija-close">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div>
+          <label class="form-label">Nombre de referencia *</label>
+          <input type="text" class="form-input" id="fija-nombre" placeholder="Ej: Mendoza Plaza Shopping" />
+        </div>
+        <div>
+          <label class="form-label">Dirección</label>
+          <input type="text" class="form-input" id="fija-address1" />
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div>
+            <label class="form-label">Ciudad</label>
+            <input type="text" class="form-input" id="fija-city" />
+          </div>
+          <div>
+            <label class="form-label">Código postal</label>
+            <input type="text" class="form-input" id="fija-zip" />
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <div>
+            <label class="form-label">Latitud *</label>
+            <input type="number" class="form-input" id="fija-lat" step="any" placeholder="-34.6037" />
+          </div>
+          <div>
+            <label class="form-label">Longitud *</label>
+            <input type="number" class="form-input" id="fija-lng" step="any" placeholder="-58.3816" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-fija-cancelar">Cancelar</button>
+      <button class="btn btn-primary" id="btn-fija-guardar">Guardar dirección fija</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal: Aplicar fija a selección -->
+<div class="modal-overlay" id="modal-aplicar-fija" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-header">
+      <span class="modal-title">Aplicar dirección fija</span>
+      <button class="modal-close" id="modal-aplicar-fija-close">&#10005;</button>
+    </div>
+    <div class="modal-body">
+      <p class="text-muted text-sm" style="margin-bottom:12px;">
+        Seleccioná una dirección fija para aplicar a las filas seleccionadas.
+      </p>
+      <div id="fijas-selector-list" style="display:flex; flex-direction:column; gap:6px; max-height:300px; overflow-y:auto;">
+        <!-- se llena con JS -->
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-aplicar-fija-cancelar">Cancelar</button>
+      <button class="btn btn-cyan" id="btn-aplicar-fija-confirmar" disabled>Enviar a Driv.in</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/toast.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/geocoder.js"></script>
+<script src="js/mapa.js"></script>
+<script src="js/drivin.js"></script>
+<script src="js/direccionesFijas.js"></script>
+<script src="js/dashboard.js"></script>
+
+</body>
+</html>

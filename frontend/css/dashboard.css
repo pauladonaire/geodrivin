@@ -1,0 +1,804 @@
+/* ============================================================
+   ANDESMAR GEO — dashboard.css
+   Layout: topbar + sidebar + main content
+   ============================================================ */
+
+/* ── Layout general ── */
+.dashboard-layout {
+  display: grid;
+  grid-template-rows: 56px 1fr;
+  grid-template-columns: 260px 1fr;
+  grid-template-areas:
+    "topbar topbar"
+    "sidebar main";
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Topbar ── */
+.topbar {
+  grid-area: topbar;
+  background: var(--blue-corp);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 0.5px solid rgba(255,255,255,0.1);
+  z-index: 100;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  background: var(--blue-corp);
+  padding: 0;
+  height: 36px;
+}
+
+.topbar-logo img {
+  height: 36px;
+  display: block;
+  object-fit: contain;
+}
+
+.topbar-logo-fallback {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  letter-spacing: 0.05em;
+}
+
+.topbar-title-group {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+
+.topbar-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  letter-spacing: 0.02em;
+}
+
+.topbar-subtitle {
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 0.04em;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.topbar-deposito-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.2;
+}
+
+.topbar-deposito-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cyan);
+}
+
+.topbar-username {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+}
+
+.topbar-separator {
+  width: 0.5px;
+  height: 28px;
+  background: rgba(255,255,255,0.15);
+}
+
+/* Hamburger (mobile) */
+.btn-hamburger {
+  display: none;
+  background: transparent;
+  color: var(--white);
+  font-size: 20px;
+  padding: 4px 8px;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  grid-area: sidebar;
+  background: var(--blue-dark);
+  border-right: 0.5px solid rgba(255,255,255,0.08);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-inner {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+
+.sidebar-section {
+  padding: 0 12px;
+  margin-bottom: 20px;
+}
+
+.sidebar-section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 0 4px;
+  margin-bottom: 8px;
+}
+
+/* Depósitos */
+.deposito-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background 0.12s;
+  border: 0.5px solid transparent;
+  margin-bottom: 2px;
+}
+
+.deposito-item:hover {
+  background: rgba(255,255,255,0.06);
+}
+
+.deposito-item.active {
+  background: rgba(1,254,255,0.08);
+  border-color: rgba(1,254,255,0.2);
+}
+
+.deposito-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.deposito-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.deposito-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.deposito-item.active .deposito-name {
+  color: var(--white);
+}
+
+.deposito-count {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.5);
+  background: rgba(255,255,255,0.08);
+  padding: 1px 6px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+.deposito-item.active .deposito-count {
+  background: rgba(1,254,255,0.15);
+  color: var(--cyan);
+}
+
+/* Filtros de fecha */
+.date-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.date-filters .form-input {
+  font-size: 12px;
+  padding: 7px 10px;
+}
+
+/* Acciones masivas sidebar */
+.sidebar-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sidebar-actions .btn {
+  width: 100%;
+  justify-content: flex-start;
+  font-size: 12px;
+  padding: 7px 12px;
+}
+
+/* Sección fijas sidebar */
+.sidebar-fijas-btn {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: var(--border-radius);
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  border: 0.5px solid transparent;
+  transition: all 0.12s;
+}
+
+.sidebar-fijas-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--white);
+  border-color: var(--border-color);
+}
+
+/* ── Contenido principal ── */
+.main-content {
+  grid-area: main;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-dark);
+}
+
+.main-inner {
+  flex: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Métricas cards ── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.metric-card {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.15s;
+}
+
+.metric-card:hover { border-color: rgba(255,255,255,0.15); }
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.4);
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--white);
+}
+
+.metric-value.cyan  { color: var(--cyan); }
+.metric-value.orange { color: #F59E0B; }
+.metric-value.green  { color: #22C55E; }
+.metric-value.yellow { color: #EAB308; }
+
+.metric-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  margin-top: 2px;
+}
+
+/* ── Barra de filtros ── */
+.filters-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 10px 14px;
+}
+
+.filters-bar .form-input,
+.filters-bar .form-select {
+  max-width: 180px;
+}
+
+.filter-search {
+  flex: 1;
+  min-width: 200px;
+  max-width: none !important;
+}
+
+.filters-bar-actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* ── Tabla ── */
+.table-wrapper {
+  flex: 1;
+  background: rgba(255,255,255,0.02);
+  border: 0.5px solid var(--border-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.table-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 0.5px solid var(--border-color);
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  flex-shrink: 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  overflow-y: auto;
+  flex: 1;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+thead th {
+  background: rgba(0,52,129,0.4);
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.55);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 0.5px solid var(--border-color);
+}
+
+thead th.col-check {
+  width: 36px;
+  padding: 10px 8px;
+}
+
+tbody tr {
+  border-bottom: 0.5px solid rgba(255,255,255,0.04);
+  transition: background 0.1s;
+}
+
+tbody tr:hover { background: rgba(255,255,255,0.03); }
+tbody tr.selected { background: rgba(1,254,255,0.05); }
+
+tbody td {
+  padding: 9px 12px;
+  vertical-align: middle;
+  color: rgba(255,255,255,0.85);
+}
+
+tbody td.col-check { padding: 9px 8px; }
+
+.td-code {
+  font-family: monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.td-name {
+  max-width: 150px;
+}
+
+.td-name-main {
+  font-weight: 500;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.td-name-client {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.td-address {
+  max-width: 180px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.75);
+}
+
+.td-address-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.td-coords {
+  font-family: monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
+}
+
+.td-date {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
+}
+
+.td-actions {
+  white-space: nowrap;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* Paginación */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border-top: 0.5px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.pagination button {
+  background: rgba(255,255,255,0.05);
+  border: 0.5px solid var(--border-color);
+  color: rgba(255,255,255,0.7);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: background 0.12s;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: rgba(255,255,255,0.1);
+  color: var(--white);
+}
+
+.pagination button.active {
+  background: var(--blue-corp);
+  border-color: var(--blue-corp);
+  color: var(--white);
+  font-weight: 600;
+}
+
+.pagination button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+}
+
+/* Checkbox personalizado */
+input[type="checkbox"] {
+  appearance: none;
+  width: 15px;
+  height: 15px;
+  border: 0.5px solid rgba(255,255,255,0.3);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.1s, background 0.1s;
+}
+
+input[type="checkbox"]:checked {
+  background: var(--cyan);
+  border-color: var(--cyan);
+}
+
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid var(--black);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* ── Modal georreferenciación ── */
+.geo-modal-body {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 20px;
+  height: 60vh;
+  min-height: 480px;
+}
+
+.geo-panel-left {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.geo-panel-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.geo-field-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.geo-field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.geo-field-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.4);
+}
+
+.geo-field-value {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 4px;
+  border: 0.5px solid var(--border-color);
+  min-height: 32px;
+  word-break: break-word;
+}
+
+.geo-field-value.coords-aprox {
+  color: #F59E0B;
+  font-family: monospace;
+  font-size: 12px;
+}
+
+.geo-field-value.sin-coords {
+  color: rgba(255,255,255,0.3);
+  font-size: 12px;
+}
+
+/* Mapa */
+#geo-map {
+  flex: 1;
+  border-radius: var(--border-radius);
+  border: 0.5px solid var(--border-color);
+  min-height: 280px;
+}
+
+/* Autocomplete */
+.autocomplete-wrapper {
+  position: relative;
+}
+
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #1a2332;
+  border: 0.5px solid rgba(1,254,255,0.3);
+  border-radius: var(--border-radius);
+  z-index: 9999;
+  max-height: 200px;
+  overflow-y: auto;
+  display: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.autocomplete-list.visible { display: block; }
+
+.autocomplete-item {
+  padding: 9px 12px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  border-bottom: 0.5px solid rgba(255,255,255,0.05);
+  transition: background 0.1s;
+}
+
+.autocomplete-item:hover {
+  background: rgba(1,254,255,0.08);
+  color: var(--white);
+}
+
+.autocomplete-item:last-child { border-bottom: none; }
+
+/* Coordenadas resultado */
+.coords-result {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.coord-box {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid var(--border-color);
+  border-radius: 4px;
+  padding: 8px 10px;
+  text-align: center;
+}
+
+.coord-box-label {
+  font-size: 10px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.coord-box-value {
+  font-family: monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cyan);
+}
+
+/* ── Modal Fijas ── */
+.fijas-table-wrapper {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.fijas-table td, .fijas-table th {
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+/* ── Vista mobile cards ── */
+@media (max-width: 768px) {
+  .dashboard-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: 56px 1fr;
+    grid-template-areas:
+      "topbar"
+      "main";
+  }
+
+  .sidebar {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 56px;
+    bottom: 0;
+    width: 280px;
+    z-index: 200;
+  }
+
+  .sidebar.mobile-open {
+    display: flex;
+  }
+
+  .btn-hamburger { display: block; }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters-bar .form-input,
+  .filters-bar .form-select {
+    max-width: none;
+  }
+
+  .filter-search { min-width: auto; }
+
+  .filters-bar-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  /* Tabla → cards en mobile */
+  table, thead, tbody, th, td, tr {
+    display: block;
+  }
+
+  thead tr { display: none; }
+
+  tbody tr {
+    background: rgba(255,255,255,0.04);
+    border: 0.5px solid var(--border-color);
+    border-radius: var(--border-radius);
+    margin-bottom: 8px;
+    padding: 12px;
+  }
+
+  tbody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border: none;
+  }
+
+  tbody td::before {
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    flex-shrink: 0;
+    width: 80px;
+  }
+
+  tbody td.col-check { display: none; }
+  .td-actions { justify-content: flex-end; }
+
+  /* Modal georreferenciación */
+  .geo-modal-body {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+
+  #geo-map { min-height: 220px; }
+
+  .topbar-subtitle { display: none; }
+  .topbar-deposito-name { font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .modal { width: 98vw; }
+  .main-inner { padding: 12px; }
+}
