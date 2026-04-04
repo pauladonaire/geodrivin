@@ -85,7 +85,9 @@ const Drivin = (() => {
     if (!r.ok) throw new Error(`Error ${r.status} al consultar Driv.in`);
 
     const data = await r.json();
+    console.log('[Drivin] Respuesta raw:', JSON.stringify(data).slice(0, 1000));
     const addresses = Array.isArray(data) ? data : (data.addresses || data.data || []);
+    console.log('[Drivin] Total direcciones recibidas:', addresses.length);
 
     const corregidas = new Set(getCorregidas().map(c => c.code));
     const cacheActual = getCache();
