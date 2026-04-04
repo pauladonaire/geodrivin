@@ -8,12 +8,29 @@ const DireccionesFijas = (() => {
   let selectedFijaId = null;
 
   function _load() {
-    try { fijas = JSON.parse(localStorage.getItem(FIJAS_KEY) || '[]'); } catch { fijas = []; }
+    try {
+      const todas = JSON.parse(localStorage.getItem(FIJAS_KEY) || '[]');
+      const user = Auth.getUser();
+      fijas = (user?.rol === 'admin')
+        ? todas
+        : todas.filter(f => !f.deposito_id || f.deposito_id === user?.deposito_id);
+    } catch { fijas = []; }
     return fijas;
   }
 
+  function _loadTodas() {
+    try { return JSON.parse(localStorage.getItem(FIJAS_KEY) || '[]'); } catch { return []; }
+  }
+
   function _save() {
-    localStorage.setItem(FIJAS_KEY, JSON.stringify(fijas));
+    // Preservar fijas de otros depósitos al guardar
+    const user = Auth.getUser();
+    if (user?.rol === 'admin') {
+      localStorage.setItem(FIJAS_KEY, JSON.stringify(fijas));
+    } else {
+      const otras = _loadTodas().filter(f => f.deposito_id && f.deposito_id !== user?.deposito_id);
+      localStorage.setItem(FIJAS_KEY, JSON.stringify([...otras, ...fijas]));
+    }
   }
 
   async function cargar() {
@@ -24,14 +41,16 @@ const DireccionesFijas = (() => {
 
   async function crear(datos) {
     _load();
+    const user = Auth.getUser();
     const nuevo = {
       id: Date.now(),
       nombre_referencia: datos.nombre_referencia,
-      address1:  datos.address1  || null,
-      city:      datos.city      || null,
-      zip_code:  datos.zip_code  || null,
-      lat:       parseFloat(datos.lat),
-      lng:       parseFloat(datos.lng),
+      address1:    datos.address1  || null,
+      city:        datos.city      || null,
+      zip_code:    datos.zip_code  || null,
+      lat:         parseFloat(datos.lat),
+      lng:         parseFloat(datos.lng),
+      deposito_id: user?.rol === 'admin' ? null : (user?.deposito_id || null),
       veces_usada: 0,
       fecha_creacion: new Date().toISOString()
     };
@@ -72,9 +91,10 @@ const DireccionesFijas = (() => {
     }
     if (empty) empty.style.display = 'none';
 
+    const user = Auth.getUser();
     tbody.innerHTML = fijas.map(f => `
       <tr>
-        <td><strong style="font-size:13px;">${esc(f.nombre_referencia)}</strong></td>
+        <td><strong style="font-size:13px;">${esc(f.nombre_referencia)}</strong>${user?.rol === 'admin' && f.deposito_id ? `<div class="text-xs text-muted">${esc(f.deposito_id)}</div>` : ''}</td>
         <td>${esc(f.address1 || '—')}</td>
         <td>${esc(f.city || '—')}</td>
         <td>${esc(f.zip_code || '—')}</td>
