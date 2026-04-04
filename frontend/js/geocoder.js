@@ -16,13 +16,24 @@ const Geocoder = (() => {
       const r = await fetch(url);
       if (!r.ok) return [];
       const data = await r.json();
-      return (data.features || []).map(f => ({
-        id:        f.id,
-        label:     f.place_name,
-        lat:       f.center[1],
-        lng:       f.center[0],
-        precision: 'Alta'
-      }));
+      return (data.features || []).map(f => {
+        // Extraer ciudad del contexto de Mapbox (place > locality > region)
+        const ctx  = f.context || [];
+        const placeCtx = ctx.find(c => c.id.startsWith('place')) ||
+                         ctx.find(c => c.id.startsWith('locality'));
+        const city = placeCtx?.text || null;
+        // address1 = primera parte del place_name (antes de la primera coma)
+        const address1 = f.place_name.split(', ')[0];
+        return {
+          id:        f.id,
+          label:     f.place_name,
+          address1,
+          city,
+          lat:       f.center[1],
+          lng:       f.center[0],
+          precision: 'Alta'
+        };
+      });
     } catch {
       return [];
     }

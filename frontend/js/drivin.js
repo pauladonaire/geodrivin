@@ -79,13 +79,34 @@ const Drivin = (() => {
   async function fetchFromDrivin() {
     const depositos = await getDepositosConfig();
 
-    const r = await fetch(`${DRIVIN_BASE_URL}/addresses?georeferenced=0`, {
-      headers: { 'X-API-Key': DRIVIN_API_KEY }
-    });
-    if (!r.ok) throw new Error(`Error ${r.status} al consultar Driv.in`);
+    // Paginar hasta traer todas las direcciones (la API devuelve 1000 por página)
+    const PER_PAGE  = 1000;
+    const MAX_PAGES = 30;
+    let allAddresses = [];
+    const seenCodes  = new Set();
 
-    const data = await r.json();
-    const addresses = Array.isArray(data) ? data : (data.response || data.addresses || data.data || []);
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const r = await fetch(
+        `${DRIVIN_BASE_URL}/addresses?georeferenced=0&page=${page}&per_page=${PER_PAGE}`,
+        { headers: { 'X-API-Key': DRIVIN_API_KEY } }
+      );
+      if (!r.ok) throw new Error(`Error ${r.status} al consultar Driv.in`);
+
+      const data  = await r.json();
+      const batch = Array.isArray(data) ? data : (data.response || data.addresses || data.data || []);
+
+      if (!batch.length) break;
+
+      // Detectar si la API no soporta paginación (devuelve siempre los mismos registros)
+      const newItems = batch.filter(a => !seenCodes.has(a.code));
+      if (!newItems.length) break;
+      batch.forEach(a => seenCodes.add(a.code));
+      allAddresses = allAddresses.concat(batch);
+
+      if (batch.length < PER_PAGE) break; // última página
+    }
+
+    const addresses = allAddresses;
 
     const corregidas = new Set(getCorregidas().map(c => c.code));
     const cacheActual = getCache();
@@ -266,13 +287,14 @@ const Drivin = (() => {
     };
   }
 
-  function buildPayload(direccion, lat, lng, precision = 'mapbox') {
+  // newAddress: { address1, city } — dirección corregida vía Mapbox (opcional)
+  function buildPayload(direccion, lat, lng, precision = 'mapbox', newAddress = null) {
     const obs = `Dir. original: ${direccion.address1 || ''}, ${direccion.city || ''}`;
     return {
       code:          direccion.code,
-      address1:      direccion.address1    || null,
+      address1:      newAddress?.address1  || direccion.address1    || null,
       address2:      direccion.address2    || null,
-      city:          direccion.city        || null,
+      city:          newAddress?.city      || direccion.city        || null,
       state:         direccion.state       || null,
       country:       direccion.country     || 'Argentina',
       zip_code:      direccion.zip_code    || null,
@@ -302,7 +324,7 @@ const Drivin = (() => {
     };
   }
 
-  return { fetchFromDrivin, getDirecciones, enviar, getDepositos, getEstadisticas, buildPayload };
+  return { fetchFromDrivin, getDirecciones, enviar, getDepositos, getEstadisticas, buildPayload, PER_PAGE: 1000 };
 })();
 
 window.Drivin = Drivin;

@@ -19,9 +19,11 @@
     depositoActivo: user.rol === 'admin' ? 'all' : user.deposito_id,
     currentGeoDir: null,  // dirección siendo georreferenciada
     currentPrecision: null,
+    selectedGeoAddress: null, // { address1, city } del resultado Mapbox elegido
     viewOnlyDir: null,
     depositos: [],
-    fijasLoaded: false
+    fijasLoaded: false,
+    sort: { field: null, dir: 1 }  // dir: 1 = asc, -1 = desc
   };
 
   // ── UI helpers ──
@@ -162,6 +164,48 @@
   //  FILTROS
   // ══════════════════════════════════════════════════════════
 
+  // ── Ordenamiento de columnas ──
+  function aplicarSort(arr) {
+    const { field, dir } = state.sort;
+    if (!field) return arr;
+    return [...arr].sort((a, b) => {
+      const va = String(a[field] ?? '').toLowerCase();
+      const vb = String(b[field] ?? '').toLowerCase();
+      if (va < vb) return -dir;
+      if (va > vb) return  dir;
+      return 0;
+    });
+  }
+
+  function updateSortHeaders() {
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      const f = th.dataset.sort;
+      const isActive = state.sort.field === f;
+      const arrow = isActive ? (state.sort.dir === 1 ? ' ▲' : ' ▼') : ' ↕';
+      // Preservar el texto base sin el indicador anterior
+      const base = th.textContent.replace(/ [▲▼↕]$/, '');
+      th.textContent = base + arrow;
+      th.style.color = isActive ? 'var(--cyan)' : '';
+    });
+  }
+
+  document.querySelectorAll('th[data-sort]').forEach(th => {
+    th.style.cursor = 'pointer';
+    th.style.userSelect = 'none';
+    th.addEventListener('click', () => {
+      const f = th.dataset.sort;
+      if (state.sort.field === f) {
+        state.sort.dir = state.sort.dir === 1 ? -1 : 1;
+      } else {
+        state.sort.field = f;
+        state.sort.dir = 1;
+      }
+      state.page = 1;
+      updateSortHeaders();
+      renderTabla();
+    });
+  });
+
   function aplicarFiltros() {
     const q       = document.getElementById('filter-search').value.toLowerCase().trim();
     const estado  = document.getElementById('filter-estado').value;
@@ -259,7 +303,8 @@
 
     const total  = state.filtered.length;
     const start  = (state.page - 1) * state.perPage;
-    const slice  = state.filtered.slice(start, start + state.perPage);
+    const sorted = aplicarSort(state.filtered);
+    const slice  = sorted.slice(start, start + state.perPage);
 
     countEl.textContent = `${total} resultado${total !== 1 ? 's' : ''} · página ${state.page} de ${Math.ceil(total / state.perPage)}`;
 
@@ -367,6 +412,7 @@
     if (!dir) return;
     state.currentGeoDir = dir;
     state.currentPrecision = null;
+    state.selectedGeoAddress = null;
 
     // Llenar datos originales
     document.getElementById('geo-code').textContent     = dir.code || '—';
@@ -426,6 +472,7 @@
       listEl:  document.getElementById('geo-autocomplete'),
       onSelect: (item) => {
         state.currentPrecision = 'Alta';
+        state.selectedGeoAddress = { address1: item.address1, city: item.city };
         Mapa.setGeoPin(item.lat, item.lng, 'Alta');
         btnEnviar.disabled = false;
       }
@@ -452,7 +499,7 @@
     btn.textContent = 'Enviando...';
 
     try {
-      const payload = Drivin.buildPayload(state.currentGeoDir, coords.lat, coords.lng, state.currentPrecision);
+      const payload = Drivin.buildPayload(state.currentGeoDir, coords.lat, coords.lng, state.currentPrecision, state.selectedGeoAddress);
       const result = await Drivin.enviar([payload]);
 
       if (result.exitosos > 0) {
@@ -787,6 +834,7 @@
   //  INICIALIZAR
   // ══════════════════════════════════════════════════════════
 
+  updateSortHeaders();
   await cargarDirecciones(false);
 
 })();
