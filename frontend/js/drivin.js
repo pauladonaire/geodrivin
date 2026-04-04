@@ -10,8 +10,13 @@ const MAPBOX_TOKEN = _mbt[0] + _mbt[1];
 
 window.MAPBOX_TOKEN = MAPBOX_TOKEN;
 
-const CACHE_KEY      = 'andesmar_cache';
 const CORREGIDAS_KEY = 'andesmar_corregidas';
+
+// ── Cache en memoria (no localStorage — sin límite de tamaño) ──
+let _memCache = [];
+
+function getCache()      { return _memCache; }
+function setCache(data)  { _memCache = data; }
 
 // ── Normalizar texto (tildes → sin tildes, minúsculas) ──
 function normalizar(str) {
@@ -30,11 +35,13 @@ async function getDepositosConfig() {
 }
 
 // ── Asignar depósito a una dirección ──
+// Prioridad: 1) código postal  2) provincia (state)  3) ciudad (city) como fallback
 function asignarDeposito(addr, depositos) {
   const zip      = (addr.zip_code || '').toString().trim();
-  const province = normalizar(addr.state);  // clasificar por provincia (state)
+  const province = normalizar(addr.state);
+  const city     = normalizar(addr.city);
 
-  // Prioridad 1: código postal exacto (incluye codigos_postales_extra)
+  // Prioridad 1: código postal exacto (codigos_postales + codigos_postales_extra)
   for (const dep of depositos) {
     const { codigos_postales = [], codigos_postales_extra = [] } = dep.reglas;
     const todos = [...codigos_postales, ...codigos_postales_extra];
@@ -42,25 +49,33 @@ function asignarDeposito(addr, depositos) {
   }
 
   // Prioridad 2: provincia (state), con exclusión de CP
-  for (const dep of depositos) {
-    const { provincias = [], excluir_codigos_postales = [] } = dep.reglas;
-    const provinciasNorm = provincias.map(normalizar);
-    if (province && provinciasNorm.includes(province)) {
-      if (excluir_codigos_postales.length > 0 && zip && excluir_codigos_postales.includes(zip)) continue;
-      return dep.id;
+  if (province) {
+    for (const dep of depositos) {
+      const { provincias = [], excluir_codigos_postales = [] } = dep.reglas;
+      const provinciasNorm = provincias.map(normalizar);
+      if (provinciasNorm.includes(province)) {
+        if (excluir_codigos_postales.length > 0 && zip && excluir_codigos_postales.includes(zip)) continue;
+        return dep.id;
+      }
+    }
+  }
+
+  // Prioridad 3: ciudad (city) — fallback para cuando state viene vacío
+  if (city) {
+    for (const dep of depositos) {
+      const { ciudades = [], excluir_codigos_postales = [] } = dep.reglas;
+      const ciudadesNorm = ciudades.map(normalizar);
+      if (ciudadesNorm.includes(city)) {
+        if (excluir_codigos_postales.length > 0 && zip && excluir_codigos_postales.includes(zip)) continue;
+        return dep.id;
+      }
     }
   }
 
   return 'sin_asignar';
 }
 
-// ── localStorage helpers ──
-function getCache() {
-  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || '[]'); } catch { return []; }
-}
-function setCache(data) {
-  localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-}
+// ── Corregidas helpers (siguen en localStorage — son pocas) ──
 function getCorregidas() {
   try { return JSON.parse(localStorage.getItem(CORREGIDAS_KEY) || '[]'); } catch { return []; }
 }
@@ -97,6 +112,12 @@ const Drivin = (() => {
 
       if (!batch.length) break;
 
+      // DEBUG temporal: ver campos del primer objeto de la API
+      if (page === 1 && batch.length > 0) {
+        console.log('[Drivin DEBUG] Primer address recibido:', batch[0]);
+        console.log('[Drivin DEBUG] Campos disponibles:', Object.keys(batch[0]));
+      }
+
       // Detectar si la API no soporta paginación (devuelve siempre los mismos registros)
       const newItems = batch.filter(a => !seenCodes.has(a.code));
       if (!newItems.length) break;
@@ -106,22 +127,14 @@ const Drivin = (() => {
       if (batch.length < PER_PAGE) break; // última página
     }
 
-    const addresses = allAddresses;
-
-    // Limpiar cache anterior antes de guardar (evita acumulación de datos viejos pesados)
-    localStorage.removeItem(CACHE_KEY);
-
     const corregidas = new Set(getCorregidas().map(c => c.code));
-    const cacheMap = {};
+    const newCache = [];
 
-    for (const addr of addresses) {
+    for (const addr of allAddresses) {
       const depositoId = asignarDeposito(addr, depositos);
-      const existing   = cacheMap[addr.code];
 
       let estado;
-      if (existing && existing.estado === 'corregida') {
-        estado = 'corregida'; // preservar si ya estaba corregida
-      } else if (corregidas.has(addr.code)) {
+      if (corregidas.has(addr.code)) {
         estado = 'corregida';
       } else if (addr.lat && addr.lng) {
         estado = 'coords_aprox';
@@ -129,37 +142,36 @@ const Drivin = (() => {
         estado = 'sin_coords';
       }
 
-      // Solo guardamos los campos necesarios para reducir tamaño en localStorage
-      cacheMap[addr.code] = {
+      newCache.push({
         code: addr.code,
         datos: {
-          code:               addr.code,
-          name:               addr.name               || null,
-          client:             addr.client             || null,
-          address1:           addr.address1           || null,
-          address2:           addr.address2           || null,
-          city:               addr.city               || null,
-          state:              addr.state              || null,
-          zip_code:           addr.zip_code           || null,
-          country:            addr.country            || 'Argentina',
-          lat:                addr.lat                || null,
-          lng:                addr.lng                || null,
-          dispatch_date:      addr.dispatch_date      || null,
-          address_type:       addr.address_type       || null,
-          phone:              addr.phone              || null,
-          email:              addr.email              || null,
-          service_time:       addr.service_time       || null,
-          time_window_start:  addr.time_window_start  || null,
-          time_window_end:    addr.time_window_end    || null,
+          code:              addr.code,
+          name:              addr.name              || null,
+          client:            addr.client            || null,
+          address1:          addr.address1          || null,
+          address2:          addr.address2          || null,
+          city:              addr.city              || null,
+          state:             addr.state             || null,
+          zip_code:          addr.zip_code          || null,
+          country:           addr.country           || 'Argentina',
+          lat:               addr.lat               || null,
+          lng:               addr.lng               || null,
+          dispatch_date:     addr.dispatch_date     || null,
+          address_type:      addr.address_type      || null,
+          phone:             addr.phone             || null,
+          email:             addr.email             || null,
+          service_time:      addr.service_time      || null,
+          time_window_start: addr.time_window_start || null,
+          time_window_end:   addr.time_window_end   || null,
         },
         deposito_id: depositoId,
         estado,
         ultima_actualizacion: new Date().toISOString()
-      };
+      });
     }
 
-    setCache(Object.values(cacheMap));
-    return { ok: true, total: addresses.length };
+    setCache(newCache);
+    return { ok: true, total: allAddresses.length };
   }
 
   async function getDirecciones(params = {}) {
@@ -217,29 +229,27 @@ const Drivin = (() => {
         }
       }
 
-      // Guardar corrección
-      const cache = getCache();
-      const item  = cache.find(c => c.code === addr.code);
+      // Guardar corrección en historial
+      const cache    = getCache();
+      const item     = cache.find(c => c.code === addr.code);
       const original = item?.datos || {};
 
       addCorregida({
-        code:             addr.code,
+        code:              addr.code,
         address1_original: original.address1,
-        city_original:    original.city,
-        lat_nueva:        addr.lat,
-        lng_nueva:        addr.lng,
-        deposito_id:      item?.deposito_id,
-        usuario:          Auth.getUser()?.username,
-        fecha_correccion: new Date().toISOString(),
-        estado_envio:     ok ? 'ok' : 'error',
-        error_detalle:    ok ? null : errorMsg
+        city_original:     original.city,
+        lat_nueva:         addr.lat,
+        lng_nueva:         addr.lng,
+        deposito_id:       item?.deposito_id,
+        usuario:           Auth.getUser()?.username,
+        fecha_correccion:  new Date().toISOString(),
+        estado_envio:      ok ? 'ok' : 'error',
+        error_detalle:     ok ? null : errorMsg
       });
 
-      // Actualizar estado en cache
-      const idx = cache.findIndex(c => c.code === addr.code);
-      if (idx >= 0) {
-        cache[idx].estado = ok ? 'corregida' : 'error_envio';
-        setCache(cache);
+      // Actualizar estado en cache en memoria
+      if (item) {
+        item.estado = ok ? 'corregida' : 'error_envio';
       }
 
       resultados.push({ code: addr.code, ok, error: ok ? null : errorMsg });
@@ -345,7 +355,7 @@ const Drivin = (() => {
     };
   }
 
-  return { fetchFromDrivin, getDirecciones, enviar, getDepositos, getEstadisticas, buildPayload, PER_PAGE: 1000 };
+  return { fetchFromDrivin, getDirecciones, enviar, getDepositos, getEstadisticas, buildPayload };
 })();
 
 window.Drivin = Drivin;

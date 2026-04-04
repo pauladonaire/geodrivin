@@ -754,12 +754,14 @@
     document.getElementById('modal-aplicar-fija').classList.add('active');
   });
 
-  document.getElementById('modal-aplicar-fija-close').addEventListener('click', () => {
+  function cerrarModalAplicarFija() {
     document.getElementById('modal-aplicar-fija').classList.remove('active');
-  });
-  document.getElementById('btn-aplicar-fija-cancelar').addEventListener('click', () => {
-    document.getElementById('modal-aplicar-fija').classList.remove('active');
-  });
+    const s = document.getElementById('fijas-selector-search');
+    if (s) s.value = '';
+  }
+
+  document.getElementById('modal-aplicar-fija-close').addEventListener('click', cerrarModalAplicarFija);
+  document.getElementById('btn-aplicar-fija-cancelar').addEventListener('click', cerrarModalAplicarFija);
 
   document.getElementById('btn-aplicar-fija-confirmar').addEventListener('click', async () => {
     const fija = DireccionesFijas.getSelected();
@@ -781,14 +783,18 @@
     try {
       await DireccionesFijas.registrarUso(fija.id);
 
+      const newAddress = (fija.address1 || fija.city)
+        ? { address1: fija.address1, city: fija.city }
+        : null;
+
       const payloads = toSend.map(d => {
-        const p = Drivin.buildPayload(d, fija.lat, fija.lng, 'mapbox');
+        const p = Drivin.buildPayload(d, fija.lat, fija.lng, 'mapbox', newAddress);
         p._tipo = 'fija';
         return p;
       });
 
       const result = await Drivin.enviar(payloads);
-      document.getElementById('modal-aplicar-fija').classList.remove('active');
+      cerrarModalAplicarFija();
 
       if (result.exitosos > 0) {
         Toast.success(`${result.exitosos} dirección${result.exitosos !== 1 ? 'es enviadas' : ' enviada'} con la dirección fija "${fija.nombre_referencia}"`);
@@ -804,6 +810,79 @@
       btn.disabled = false;
       btn.textContent = 'Enviar a Driv.in';
     }
+  });
+
+  // ══════════════════════════════════════════════════════════
+  //  TOP 10 FRECUENTES
+  // ══════════════════════════════════════════════════════════
+
+  function getTop10Frecuentes() {
+    const counts = {};
+    for (const d of state.allDirecciones) {
+      if (!d.address1) continue;
+      const key = normalizar(d.address1) + '|' + normalizar(d.city || '');
+      if (!counts[key]) {
+        // Buscar si alguna de las coincidencias tiene coords
+        counts[key] = { address1: d.address1, city: d.city || '', count: 0, lat: null, lng: null };
+      }
+      counts[key].count++;
+      if (!counts[key].lat && (d.lat_nueva ?? d.lat)) {
+        counts[key].lat = d.lat_nueva ?? d.lat;
+        counts[key].lng = d.lng_nueva ?? d.lng;
+      }
+    }
+    return Object.values(counts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+  }
+
+  function renderTop10Modal() {
+    const items = getTop10Frecuentes();
+    const tbody = document.getElementById('top10-tbody');
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-muted" style="text-align:center;padding:20px;">Sin datos. Cargá las direcciones primero.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    items.forEach((item, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="text-align:center; font-weight:600; color:var(--cyan);">${i + 1}</td>
+        <td>${esc(item.address1)}</td>
+        <td>${esc(item.city)}</td>
+        <td style="text-align:center; font-weight:600;">${item.count}</td>
+        <td style="text-align:center;"></td>
+      `;
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-ghost btn-sm';
+      btn.textContent = '★ Guardar fija';
+      btn.addEventListener('click', () => guardarFijaDesdeTop10(item));
+      tr.querySelector('td:last-child').appendChild(btn);
+      tbody.appendChild(tr);
+    });
+  }
+
+  function guardarFijaDesdeTop10(item) {
+    document.getElementById('modal-top10').classList.remove('active');
+    const modal = document.getElementById('modal-nueva-fija');
+    delete modal.dataset.editId;
+    modal.querySelector('.modal-title').textContent = 'Guardar dirección fija';
+    document.getElementById('fija-nombre').value   = item.address1 + (item.city ? ', ' + item.city : '');
+    document.getElementById('fija-address1').value = item.address1;
+    document.getElementById('fija-city').value     = item.city;
+    document.getElementById('fija-zip').value      = '';
+    document.getElementById('fija-lat').value      = item.lat ?? '';
+    document.getElementById('fija-lng').value      = item.lng ?? '';
+    modal.classList.add('active');
+  }
+
+  document.getElementById('btn-show-top10').addEventListener('click', () => {
+    renderTop10Modal();
+    document.getElementById('modal-top10').classList.add('active');
+  });
+
+  document.getElementById('modal-top10-close').addEventListener('click', () => {
+    document.getElementById('modal-top10').classList.remove('active');
   });
 
   // ══════════════════════════════════════════════════════════

@@ -12,6 +12,16 @@
           "CABA",
           "GBA"
         ],
+        "ciudades": [
+          "Buenos Aires", "Capital Federal",
+          "Avellaneda", "Lanús", "Lanus", "Lomas de Zamora", "Quilmes",
+          "Berazategui", "Florencio Varela", "Almirante Brown",
+          "Esteban Echeverría", "Esteban Echeverria",
+          "Morón", "Moron", "Tigre", "San Isidro", "Vicente López", "Vicente Lopez",
+          "La Matanza", "Merlo", "Moreno", "San Miguel", "Malvinas Argentinas",
+          "Tres de Febrero", "Hurlingham", "Ituzaingó", "Ituzaingo",
+          "San Justo", "Ramos Mejía", "Ramos Mejia", "Haedo", "Ciudadela"
+        ],
         "codigos_postales": [],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
@@ -24,6 +34,11 @@
       "reglas": {
         "provincias": [
           "Mendoza"
+        ],
+        "ciudades": [
+          "Mendoza", "Godoy Cruz", "Guaymallén", "Guaymallen",
+          "Las Heras", "Maipú", "Maipu", "Luján de Cuyo", "Lujan de Cuyo",
+          "Capital", "Ciudad de Mendoza"
         ],
         "codigos_postales": [],
         "codigos_postales_extra": ["5435", "5427"],
@@ -40,6 +55,7 @@
       "color": "#003481",
       "reglas": {
         "provincias": [],
+        "ciudades": [],
         "codigos_postales": ["5600", "5620", "5613", "5602", "5604", "5612"],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
@@ -51,6 +67,7 @@
       "color": "#185FA5",
       "reglas": {
         "provincias": [],
+        "ciudades": [],
         "codigos_postales": ["5570", "5584", "5585", "5573", "5577", "5579", "5590", "5582", "5589"],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
@@ -62,6 +79,7 @@
       "color": "#0F6E56",
       "reglas": {
         "provincias": [],
+        "ciudades": [],
         "codigos_postales": ["5560", "5561", "5567", "5565"],
         "codigos_postales_extra": [],
         "excluir_codigos_postales": []
@@ -75,6 +93,12 @@
         "provincias": [
           "Córdoba",
           "Cordoba"
+        ],
+        "ciudades": [
+          "Córdoba", "Cordoba", "Villa Carlos Paz",
+          "Río Cuarto", "Rio Cuarto", "Villa María", "Villa Maria",
+          "Alta Gracia", "Bell Ville", "Jesús María", "Jesus Maria",
+          "San Francisco", "Cosquín", "Cosquin", "La Falda"
         ],
         "codigos_postales": [],
         "codigos_postales_extra": [],
@@ -91,6 +115,12 @@
           "Neuquen",
           "Río Negro",
           "Rio Negro"
+        ],
+        "ciudades": [
+          "Neuquén", "Neuquen", "Cipolletti", "Plottier",
+          "Allen", "General Roca", "Roca", "Cinco Saltos",
+          "Viedma", "Bariloche", "San Carlos de Bariloche",
+          "Centenario", "Vista Alegre"
         ],
         "codigos_postales": [],
         "codigos_postales_extra": [],

@@ -96,31 +96,62 @@ const DireccionesFijas = (() => {
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    // Limpiar buscador al abrir
+    const searchInput = document.getElementById('fijas-selector-search');
+    if (searchInput) searchInput.value = '';
+
     if (!fijas.length) {
       container.innerHTML = '<div class="empty-state" style="padding:24px;"><div class="empty-state-msg">No hay direcciones fijas guardadas.</div></div>';
       return;
     }
 
-    container.innerHTML = fijas.map(f => `
-      <div class="card" style="cursor:pointer;border:0.5px solid var(--border-color);padding:10px 14px;"
-           data-fija-id="${f.id}" onclick="DireccionesFijas._selectFija(${f.id}, this)">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div>
-            <div style="font-weight:600;font-size:13px;">${esc(f.nombre_referencia)}</div>
-            <div class="text-muted text-sm">${esc(f.address1 || '')} ${esc(f.city ? '— ' + f.city : '')}</div>
+    function _renderCards(lista) {
+      container.innerHTML = '';
+      if (!lista.length) {
+        container.innerHTML = '<div class="text-muted text-sm" style="padding:12px;text-align:center;">Sin resultados.</div>';
+        return;
+      }
+      lista.forEach(f => {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.style.cssText = 'cursor:pointer;border:0.5px solid var(--border-color);padding:10px 14px;';
+        el.dataset.fijaId = f.id;
+        el.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div>
+              <div style="font-weight:600;font-size:13px;">${esc(f.nombre_referencia)}</div>
+              <div class="text-muted text-sm">${esc(f.address1 || '')} ${esc(f.city ? '— ' + f.city : '')}</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-family:monospace;font-size:11px;color:var(--cyan);">${f.lat?.toFixed(5)}, ${f.lng?.toFixed(5)}</div>
+              <div class="text-xs text-muted">usada ${f.veces_usada || 0}x</div>
+            </div>
           </div>
-          <div style="text-align:right;">
-            <div style="font-family:monospace;font-size:11px;color:var(--cyan);">${f.lat?.toFixed(5)}, ${f.lng?.toFixed(5)}</div>
-            <div class="text-xs text-muted">usada ${f.veces_usada || 0}x</div>
-          </div>
-        </div>
-      </div>
-    `).join('');
-
-    if (onSelect) {
-      container.querySelectorAll('[data-fija-id]').forEach(el => {
-        el.addEventListener('click', () => onSelect(parseInt(el.dataset.fijaId)));
+        `;
+        el.addEventListener('click', () => {
+          _selectFija(f.id, el);
+          if (onSelect) onSelect(f.id);
+        });
+        container.appendChild(el);
       });
+    }
+
+    _renderCards(fijas);
+
+    if (searchInput) {
+      // Reemplazar listener anterior clonando el nodo
+      const fresh = searchInput.cloneNode(true);
+      searchInput.parentNode.replaceChild(fresh, searchInput);
+      fresh.addEventListener('input', () => {
+        const q = fresh.value.toLowerCase().trim();
+        if (!q) { _renderCards(fijas); return; }
+        const filtered = fijas.filter(f =>
+          [f.nombre_referencia, f.address1, f.city]
+            .filter(Boolean).join(' ').toLowerCase().includes(q)
+        );
+        _renderCards(filtered);
+      });
+      fresh.focus();
     }
   }
 

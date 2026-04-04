@@ -99,6 +99,9 @@
         <button class="sidebar-fijas-btn" id="btn-show-fijas">
           &#9733; Direcciones fijas
         </button>
+        <button class="sidebar-fijas-btn" id="btn-show-top10" style="margin-top:6px;">
+          &#128202; Top 10 frecuentes
+        </button>
       </div>
 
     </div>
@@ -437,16 +440,52 @@
       <button class="modal-close" id="modal-aplicar-fija-close">&#10005;</button>
     </div>
     <div class="modal-body">
-      <p class="text-muted text-sm" style="margin-bottom:12px;">
+      <p class="text-muted text-sm" style="margin-bottom:10px;">
         Seleccioná una dirección fija para aplicar a las filas seleccionadas.
       </p>
-      <div id="fijas-selector-list" style="display:flex; flex-direction:column; gap:6px; max-height:300px; overflow-y:auto;">
+      <input type="text" class="form-input" id="fijas-selector-search"
+             placeholder="Buscar por nombre, dirección o ciudad..." autocomplete="off"
+             style="margin-bottom:10px;" />
+      <div id="fijas-selector-list" style="display:flex; flex-direction:column; gap:6px; max-height:280px; overflow-y:auto;">
         <!-- se llena con JS -->
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" id="btn-aplicar-fija-cancelar">Cancelar</button>
       <button class="btn btn-cyan" id="btn-aplicar-fija-confirmar" disabled>Enviar a Driv.in</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal: Top 10 frecuentes -->
+<div class="modal-overlay" id="modal-top10" role="dialog" aria-modal="true">
+  <div class="modal" style="max-width:720px;">
+    <div class="modal-header">
+      <span class="modal-title">Top 10 direcciones más frecuentes</span>
+      <button class="modal-close" id="modal-top10-close">&#10005;</button>
+    </div>
+    <div class="modal-body" style="padding:16px;">
+      <p class="text-muted text-sm" style="margin-bottom:12px;">
+        Direcciones que aparecen más veces en el listado actual. Guardá las más frecuentes como fijas para aplicarlas en masa.
+      </p>
+      <div class="table-scroll" style="max-height:400px;">
+        <table style="width:100%;">
+          <thead>
+            <tr>
+              <th style="width:40px;">#</th>
+              <th>Dirección</th>
+              <th>Ciudad</th>
+              <th style="width:70px; text-align:center;">Pedidos</th>
+              <th style="width:120px; text-align:center;">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="top10-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="modal-top10-close-btn" onclick="document.getElementById('modal-top10').classList.remove('active')">Cerrar</button>
     </div>
   </div>
 </div>
