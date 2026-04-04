@@ -41,16 +41,15 @@ const DireccionesFijas = (() => {
 
   async function crear(datos) {
     _load();
-    const user = Auth.getUser();
     const nuevo = {
       id: Date.now(),
       nombre_referencia: datos.nombre_referencia,
-      address1:    datos.address1  || null,
-      city:        datos.city      || null,
-      zip_code:    datos.zip_code  || null,
+      address1:    datos.address1    || null,
+      city:        datos.city        || null,
+      zip_code:    datos.zip_code    || null,
       lat:         parseFloat(datos.lat),
       lng:         parseFloat(datos.lng),
-      deposito_id: user?.rol === 'admin' ? null : (user?.deposito_id || null),
+      deposito_id: datos.deposito_id || null,
       veces_usada: 0,
       fecha_creacion: new Date().toISOString()
     };
@@ -204,6 +203,9 @@ const DireccionesFijas = (() => {
     const modal = document.getElementById('modal-nueva-fija');
     modal.dataset.editId = id;
     modal.querySelector('.modal-title').textContent = 'Editar dirección fija';
+    // Notificar a dashboard para que configure el campo depósito
+    modal.dataset.editDepositoId = fija.deposito_id || '';
+    modal.dispatchEvent(new CustomEvent('fija-edit-open', { detail: { depositoId: fija.deposito_id || null } }));
     modal.classList.add('active');
   }
 

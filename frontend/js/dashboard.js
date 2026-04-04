@@ -526,17 +526,14 @@
     const dir = state.currentGeoDir;
     if (!dir) return;
 
-    document.getElementById('fija-nombre').value   = dir.name || dir.client || dir.code || '';
-    document.getElementById('fija-address1').value = dir.address1 || '';
-    document.getElementById('fija-city').value     = dir.city || '';
-    document.getElementById('fija-zip').value      = dir.zip_code || '';
-    document.getElementById('fija-lat').value      = coords.lat;
-    document.getElementById('fija-lng').value      = coords.lng;
-
-    const modal = document.getElementById('modal-nueva-fija');
-    delete modal.dataset.editId;
-    modal.querySelector('.modal-title').textContent = 'Guardar dirección fija';
-    modal.classList.add('active');
+    abrirModalNuevaFija({
+      nombre:   dir.name || dir.client || dir.code || '',
+      address1: dir.address1 || '',
+      city:     dir.city || '',
+      zip:      dir.zip_code || '',
+      lat:      coords.lat,
+      lng:      coords.lng
+    });
   });
 
   // ══════════════════════════════════════════════════════════
@@ -665,6 +662,60 @@
   //  DIRECCIONES FIJAS
   // ══════════════════════════════════════════════════════════
 
+  // ── Campo depósito en modal fija ──
+  function configurarCampoDeposito(depositoIdActual = null) {
+    const container = document.getElementById('fija-deposito-container');
+    if (!container) return;
+
+    if (user.rol === 'admin') {
+      // Admin: select con todos los depósitos
+      const deps = [
+        { id: '', nombre: '— Sin depósito (compartida) —' },
+        ...state.depositos
+      ];
+      const select = document.createElement('select');
+      select.className = 'form-select';
+      select.id = 'fija-deposito-select';
+      deps.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.id;
+        opt.textContent = d.nombre;
+        if (d.id === (depositoIdActual || '')) opt.selected = true;
+        select.appendChild(opt);
+      });
+      container.innerHTML = '';
+      container.appendChild(select);
+    } else {
+      // No-admin: solo lectura con su depósito
+      container.innerHTML = `
+        <div class="form-input" style="background:rgba(255,255,255,0.04); cursor:default; color:rgba(255,255,255,0.5);">
+          ${esc(user.deposito_nombre || user.deposito_id)}
+        </div>
+      `;
+    }
+  }
+
+  function getDepositoIdDelModal() {
+    if (user.rol === 'admin') {
+      return document.getElementById('fija-deposito-select')?.value || null;
+    }
+    return user.deposito_id || null;
+  }
+
+  function abrirModalNuevaFija(preData = {}) {
+    const modal = document.getElementById('modal-nueva-fija');
+    delete modal.dataset.editId;
+    modal.querySelector('.modal-title').textContent = 'Nueva dirección fija';
+    document.getElementById('fija-nombre').value   = preData.nombre   || '';
+    document.getElementById('fija-address1').value = preData.address1 || '';
+    document.getElementById('fija-city').value     = preData.city     || '';
+    document.getElementById('fija-zip').value      = preData.zip      || '';
+    document.getElementById('fija-lat').value      = preData.lat      ?? '';
+    document.getElementById('fija-lng').value      = preData.lng      ?? '';
+    configurarCampoDeposito(null);
+    modal.classList.add('active');
+  }
+
   async function mostrarVista(vista) {
     document.getElementById('view-table').style.display = vista === 'table' ? '' : 'none';
     document.getElementById('view-fijas').style.display = vista === 'fijas' ? '' : 'none';
@@ -677,17 +728,13 @@
 
   document.getElementById('btn-show-fijas').addEventListener('click', () => mostrarVista('fijas'));
   document.getElementById('btn-back-to-table').addEventListener('click', () => mostrarVista('table'));
-  document.getElementById('btn-nueva-fija').addEventListener('click', () => {
-    const modal = document.getElementById('modal-nueva-fija');
-    delete modal.dataset.editId;
-    modal.querySelector('.modal-title').textContent = 'Nueva dirección fija';
-    ['fija-nombre','fija-address1','fija-city','fija-zip','fija-lat','fija-lng'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    modal.classList.add('active');
-  });
+  document.getElementById('btn-nueva-fija').addEventListener('click', () => abrirModalNuevaFija());
 
   // Modal nueva/editar fija
+  document.getElementById('modal-nueva-fija').addEventListener('fija-edit-open', (e) => {
+    configurarCampoDeposito(e.detail.depositoId);
+  });
+
   document.getElementById('modal-nueva-fija-close').addEventListener('click', () => {
     document.getElementById('modal-nueva-fija').classList.remove('active');
   });
@@ -705,9 +752,10 @@
 
     const datos = {
       nombre_referencia: nombre,
-      address1: document.getElementById('fija-address1').value.trim() || null,
-      city:     document.getElementById('fija-city').value.trim() || null,
-      zip_code: document.getElementById('fija-zip').value.trim() || null,
+      address1:    document.getElementById('fija-address1').value.trim() || null,
+      city:        document.getElementById('fija-city').value.trim() || null,
+      zip_code:    document.getElementById('fija-zip').value.trim() || null,
+      deposito_id: getDepositoIdDelModal(),
       lat, lng
     };
 
@@ -731,15 +779,7 @@
   });
 
   // Botón en header de filtros
-  document.getElementById('btn-guardar-fija-header').addEventListener('click', () => {
-    const modal = document.getElementById('modal-nueva-fija');
-    delete modal.dataset.editId;
-    modal.querySelector('.modal-title').textContent = 'Nueva dirección fija';
-    ['fija-nombre','fija-address1','fija-city','fija-zip','fija-lat','fija-lng'].forEach(id => {
-      document.getElementById(id).value = '';
-    });
-    modal.classList.add('active');
-  });
+  document.getElementById('btn-guardar-fija-header').addEventListener('click', () => abrirModalNuevaFija());
 
   // ── Aplicar fija a selección ──
   document.getElementById('btn-aplicar-fija-sel').addEventListener('click', async () => {
@@ -864,16 +904,13 @@
 
   function guardarFijaDesdeTop10(item) {
     document.getElementById('modal-top10').classList.remove('active');
-    const modal = document.getElementById('modal-nueva-fija');
-    delete modal.dataset.editId;
-    modal.querySelector('.modal-title').textContent = 'Guardar dirección fija';
-    document.getElementById('fija-nombre').value   = item.address1 + (item.city ? ', ' + item.city : '');
-    document.getElementById('fija-address1').value = item.address1;
-    document.getElementById('fija-city').value     = item.city;
-    document.getElementById('fija-zip').value      = '';
-    document.getElementById('fija-lat').value      = item.lat ?? '';
-    document.getElementById('fija-lng').value      = item.lng ?? '';
-    modal.classList.add('active');
+    abrirModalNuevaFija({
+      nombre:   item.address1 + (item.city ? ', ' + item.city : ''),
+      address1: item.address1,
+      city:     item.city,
+      lat:      item.lat ?? '',
+      lng:      item.lng ?? ''
+    });
   }
 
   document.getElementById('btn-show-top10').addEventListener('click', () => {
