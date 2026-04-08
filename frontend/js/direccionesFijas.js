@@ -86,6 +86,7 @@ const DireccionesFijas = (() => {
 
   // ── CRUD ───────────────────────────────────────────────────
   async function crear(datos) {
+    await cargar(); // siempre re-leer del sheet antes de escribir
     const nuevo = {
       id:                String(Date.now()),
       nombre_referencia: datos.nombre_referencia,
@@ -104,6 +105,7 @@ const DireccionesFijas = (() => {
   }
 
   async function actualizar(id, datos) {
+    await cargar(); // siempre re-leer del sheet antes de escribir
     const sid = String(id);
     const idx = fijas.findIndex(f => String(f.id) === sid);
     if (idx < 0) throw new Error('No encontrada');
@@ -112,6 +114,7 @@ const DireccionesFijas = (() => {
   }
 
   async function eliminar(id) {
+    await cargar(); // siempre re-leer del sheet antes de escribir
     const sid = String(id);
     fijas = fijas.filter(f => String(f.id) !== sid);
     await _guardar();
