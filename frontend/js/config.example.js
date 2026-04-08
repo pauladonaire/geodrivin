@@ -6,10 +6,22 @@
 
 const CONFIG = {
 
-  // ── Google Sheets API Key ──────────────────────────────────
-  // Obtenela en: Google Cloud Console → APIs → Credentials
-  // Restricción recomendada: solo "Google Sheets API" + referrer de tu dominio
-  SHEETS_API_KEY: 'AIzaSyBqsKySJZCQJ08eImBuMGyDjaISldwD0v4',
+  // ── Apps Script Web App (para escritura en Sheets) ────────
+  // Los Google Sheets API Keys NO permiten escribir, solo leer.
+  // La escritura se hace a través de un Google Apps Script desplegado
+  // como Web App. Seguí estos pasos:
+  //
+  //  1. Abrí: https://script.google.com → "Nuevo proyecto"
+  //  2. Borrá el código de ejemplo y pegá el código de sheetProxy.gs
+  //     (está en la carpeta /scripts/ del proyecto)
+  //  3. Clic en "Implementar" → "Nueva implementación"
+  //     · Tipo: "Aplicación web"
+  //     · Ejecutar como: "Yo (tu cuenta)"
+  //     · Quién tiene acceso: "Cualquier persona"
+  //  4. Autorizá los permisos cuando te lo pida
+  //  5. Copiá la URL de la implementación (termina en /exec)
+  //  6. Pegala como valor de APPS_SCRIPT_URL abajo
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/TU_ID_ACA/exec',
 
   // ── IDs de los Google Sheets ───────────────────────────────
   // Encontrás el ID en la URL del Sheet:

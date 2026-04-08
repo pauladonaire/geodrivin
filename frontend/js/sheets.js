@@ -6,10 +6,6 @@
 
 const Sheets = (() => {
 
-  function _key() {
-    return (typeof CONFIG !== 'undefined' && CONFIG.SHEETS_API_KEY) ? CONFIG.SHEETS_API_KEY : null;
-  }
-
   // ── Parser CSV (maneja campos con comas y comillas) ────────
   function _parseLine(line) {
     const cells = [];
@@ -57,37 +53,27 @@ const Sheets = (() => {
     return _parseCSV(text);
   }
 
-  // ── Sobreescribir Sheet (limpiar + reescribir todo) ────────
-  // Usada para crear / actualizar / eliminar filas en fijas.
+  // ── Sobreescribir Sheet vía Google Apps Script (proxy) ─────
+  // La escritura directa con API Key no es soportada por Google.
+  // Se usa un Apps Script desplegado como Web App (Execute as: Me,
+  // Access: Anyone) que recibe los datos y escribe con tus credenciales.
   // headers: array de strings con los nombres de columna
   // filas: array de arrays con los valores (sin la fila de headers)
   async function sobreescribirSheet(sheetId, tabName, headers, filas) {
-    const key = _key();
-    if (!key) throw new Error('SHEETS_API_KEY no está configurada en config.js');
+    const scriptUrl = (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL) ? CONFIG.APPS_SCRIPT_URL : null;
+    if (!scriptUrl) throw new Error('APPS_SCRIPT_URL no está configurada en config.js. Seguí las instrucciones para crear el Apps Script.');
 
-    const encTab = encodeURIComponent(tabName);
-
-    // 1. Limpiar la pestaña
-    const clearUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encTab}:clear?key=${key}`;
-    const cr = await fetch(clearUrl, { method: 'POST' });
-    if (!cr.ok) {
-      const e = await cr.json().catch(() => ({}));
-      throw new Error(e.error?.message || `Error al limpiar el Sheet (${cr.status})`);
-    }
-
-    // 2. Escribir headers + datos
-    const values = [headers, ...filas];
-    const writeUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encTab}?valueInputOption=USER_ENTERED&key=${key}`;
-    const wr = await fetch(writeUrl, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ values })
+    const r = await fetch(scriptUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ sheetId, tabName, headers, filas })
     });
-    if (!wr.ok) {
-      const e = await wr.json().catch(() => ({}));
-      throw new Error(e.error?.message || `Error al escribir en el Sheet (${wr.status})`);
-    }
-    return wr.json();
+
+    if (!r.ok) throw new Error(`Error al contactar el Apps Script (${r.status})`);
+
+    const data = await r.json().catch(() => ({}));
+    if (data.ok === false) throw new Error(data.error || 'Error desconocido en el Apps Script');
+    return data;
   }
 
   return { leerSheet, sobreescribirSheet };
