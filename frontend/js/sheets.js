@@ -63,10 +63,14 @@ const Sheets = (() => {
     const scriptUrl = (typeof CONFIG !== 'undefined' && CONFIG.APPS_SCRIPT_URL) ? CONFIG.APPS_SCRIPT_URL : null;
     if (!scriptUrl) throw new Error('APPS_SCRIPT_URL no está configurada en config.js. Seguí las instrucciones para crear el Apps Script.');
 
+    // Usamos URLSearchParams (application/x-www-form-urlencoded) para evitar
+    // el CORS preflight que bloquea las peticiones cross-origin a Apps Script.
     const r = await fetch(scriptUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify({ sheetId, tabName, headers, filas })
+      redirect: 'follow',
+      body: new URLSearchParams({
+        payload: JSON.stringify({ sheetId, tabName, headers, filas })
+      })
     });
 
     if (!r.ok) throw new Error(`Error al contactar el Apps Script (${r.status})`);

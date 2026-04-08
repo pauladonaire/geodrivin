@@ -7,7 +7,8 @@ const DireccionesFijas = (() => {
   // ── Columnas del Sheet (orden exacto) ─────────────────────
   const HEADERS = ['id','nombre_referencia','address1','city','zip_code','lat','lng','deposito_id','veces_usada','fecha_creacion'];
 
-  let fijas = [];
+  let fijas = [];          // filas visibles para el usuario actual
+  let _todasFijas = [];   // filas completas del sheet (incluyendo otros depósitos)
   let selectedFijaId = null;
 
   // ── Config helpers ─────────────────────────────────────────
@@ -42,7 +43,17 @@ const DireccionesFijas = (() => {
       localStorage.setItem('andesmar_fijas', JSON.stringify(fijas));
       return;
     }
-    await Sheets.sobreescribirSheet(sheetId, _sheetTab(), HEADERS, fijas.map(_fijaToRow));
+    // Reconstruir el sheet completo: filas de otros depósitos + filas del usuario actual
+    const user = Auth.getUser();
+    let toWrite;
+    if (user?.rol === 'admin') {
+      toWrite = fijas; // admin ve y escribe todo
+    } else {
+      // Filas que NO pertenecen al depósito del usuario actual (no tocar)
+      const otras = _todasFijas.filter(f => f.deposito_id && f.deposito_id !== user?.deposito_id);
+      toWrite = [...otras, ...fijas];
+    }
+    await Sheets.sobreescribirSheet(sheetId, _sheetTab(), HEADERS, toWrite.map(_fijaToRow));
   }
 
   // ── Cargar desde Sheets (o localStorage como fallback) ────
@@ -51,6 +62,7 @@ const DireccionesFijas = (() => {
     if (sheetId) {
       const { rows } = await Sheets.leerSheet(sheetId);
       const todasSheets = rows.filter(r => r.id).map(_rowToFija);
+      _todasFijas = todasSheets; // guardar copia completa para _guardar()
       const user = Auth.getUser();
       fijas = (user?.rol === 'admin')
         ? todasSheets

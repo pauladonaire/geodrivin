@@ -23,7 +23,12 @@ const ALLOWED_SHEET_IDS = [
 
 function doPost(e) {
   try {
-    const body = JSON.parse(e.postData.contents);
+    // El frontend envía como application/x-www-form-urlencoded con campo "payload"
+    // (evita CORS preflight). Fallback a postData.contents por compatibilidad.
+    const raw = (e.parameter && e.parameter.payload)
+      ? e.parameter.payload
+      : e.postData.contents;
+    const body = JSON.parse(raw);
     const { sheetId, tabName, headers, filas } = body;
 
     // Validaciones básicas
