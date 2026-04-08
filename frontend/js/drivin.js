@@ -158,6 +158,16 @@ const Drivin = (() => {
       if (batch.length < PER_PAGE) break; // última página
     }
 
+    // ── Cargar y registrar fechas de ingreso en Sheet ────────
+    let pendientesMap = new Map();
+    try {
+      const allCodes = allAddresses.map(a => a.code).filter(Boolean);
+      await PendientesSheet.registrarNuevos(allCodes);
+      pendientesMap = PendientesSheet.getMap();
+    } catch (e) {
+      console.warn('[PendientesSheet] Error al registrar fechas:', e.message);
+    }
+
     const corregidas = new Set(getCorregidas().map(c => c.code));
     const newCache = [];
 
@@ -187,7 +197,7 @@ const Drivin = (() => {
           country:           addr.country           || 'Argentina',
           lat:               addr.lat               || null,
           lng:               addr.lng               || null,
-          dispatch_date:     addr.dispatch_date     || null,
+          dispatch_date:     pendientesMap.get(addr.code) || addr.dispatch_date || null,
           address_type:      addr.address_type      || null,
           phone:             addr.phone             || null,
           email:             addr.email             || null,
@@ -284,6 +294,16 @@ const Drivin = (() => {
       }
 
       resultados.push({ code: addr.code, ok, error: ok ? null : errorMsg });
+    }
+
+    // ── Eliminar del Sheet los codes enviados correctamente ──
+    const exitososCodes = resultados.filter(r => r.ok).map(r => r.code);
+    if (exitososCodes.length > 0) {
+      try {
+        await PendientesSheet.eliminarVarios(exitososCodes);
+      } catch (e) {
+        console.warn('[PendientesSheet] Error al eliminar codes corregidos:', e.message);
+      }
     }
 
     const exitosos = resultados.filter(r => r.ok).length;

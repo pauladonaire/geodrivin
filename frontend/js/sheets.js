@@ -45,9 +45,12 @@ const Sheets = (() => {
   }
 
   // ── Leer Sheet vía CSV público ─────────────────────────────
-  // gid = pestaña (0 = primera pestaña, el default)
-  async function leerSheet(sheetId, gid = 0) {
-    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  // gidOrTab: número (gid) o string (nombre de pestaña). Default: 0 = primera pestaña.
+  async function leerSheet(sheetId, gidOrTab = 0) {
+    const tabParam = typeof gidOrTab === 'string'
+      ? `sheet=${encodeURIComponent(gidOrTab)}`
+      : `gid=${gidOrTab}`;
+    const url = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&${tabParam}`;
     const r = await fetch(url, { cache: 'no-store' });
     if (!r.ok) throw new Error(`No se pudo leer el Sheet (${r.status}). Verificá que sea público ("Anyone with link can view").`);
     const text = await r.text();

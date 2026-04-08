@@ -5,7 +5,10 @@ const CONFIG = {
   DEPOSITOS_SHEET_ID: '1yjgGOPMWxjodE16CfYXwcq6of6ydMROZ0VgituXGUXg',
   USUARIOS_SHEET_ID:  '1BjujCArFJMz1qiOWoVXhhi70GtJoDtPx2iV3WvScuAY',
 
-  FIJAS_SHEET_TAB:     'Fijas',
-  DEPOSITOS_SHEET_TAB: 'Depositos',
-  USUARIOS_SHEET_TAB:  'Usuarios',
+  FIJAS_SHEET_TAB:       'Fijas',
+  DEPOSITOS_SHEET_TAB:   'Depositos',
+  USUARIOS_SHEET_TAB:    'Usuarios',
+
+  PENDIENTES_SHEET_ID:   '1DmAhLJlqBR2pWoqym5nstwI_kb0SwbMUvl70VCFDEOI',
+  PENDIENTES_SHEET_TAB:  'DireccionesPendientes',
 };
