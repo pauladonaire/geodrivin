@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exportar Datos — Andesmar Geo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      padding: 24px;
+      min-height: 100vh;
+    }
+    h1 { color: #58a6ff; font-size: 22px; margin-bottom: 6px; }
+    .subtitle { color: #8b949e; font-size: 13px; margin-bottom: 28px; }
+    .section {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 18px;
+      background: #1c2128;
+      border-bottom: 1px solid #30363d;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .section-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #e6edf3;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 20px;
+      font-size: 11px;
+      padding: 2px 8px;
+      color: #8b949e;
+    }
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn {
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: none;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-blue { background: #1f6feb; color: #fff; }
+    .btn-green { background: #2ea043; color: #fff; }
+    .btn-orange { background: #9e6a03; color: #fff; }
+    .section-body { padding: 16px 18px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th {
+      text-align: left;
+      padding: 6px 10px;
+      background: #21262d;
+      color: #8b949e;
+      font-weight: 600;
+      border-bottom: 1px solid #30363d;
+      white-space: nowrap;
+    }
+    td {
+      padding: 6px 10px;
+      border-bottom: 1px solid #21262d;
+      vertical-align: top;
+      color: #e6edf3;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .mono { font-family: monospace; font-size: 11px; color: #79c0ff; }
+    .tag-admin { color: #f85149; font-weight: 600; }
+    .tag-user { color: #58a6ff; }
+    .empty-msg { color: #8b949e; font-style: italic; padding: 12px 0; }
+    .alert {
+      background: #161b22;
+      border: 1px solid #f0883e;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #f0883e;
+    }
+    .alert strong { color: #ffa657; }
+    .info-box {
+      background: #0d2137;
+      border: 1px solid #1f6feb;
+      border-radius: 6px;
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #79c0ff;
+    }
+    .copied { background: #2ea043 !important; }
+    pre {
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      padding: 10px;
+      font-size: 11px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: #8b949e;
+      max-height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <h1>📦 Exportar datos — Andesmar Geo</h1>
+  <p class="subtitle">Esta página vuelca todos los datos actuales antes de migrar a Google Sheets. No modifica nada.</p>
+
+  <div class="alert">
+    <strong>⚠️ Atención:</strong> Los datos de localStorage son específicos de <strong>esta computadora</strong>.
+    Para exportar los datos de otro equipo, abrir esta misma página desde ese equipo.
+  </div>
+
+  <!-- SECCIÓN: USUARIOS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        👤 Usuarios (hardcodeados en auth.js)
+        <span class="badge" id="badge-usuarios">8 usuarios</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-blue" onclick="descargarJSON('usuarios', getUsuariosData())">⬇ Descargar JSON</button>
+        <button class="btn btn-green" id="btn-copy-usuarios" onclick="copiarParaSheets('usuarios')">📋 Copiar para Sheets</button>
+      </div>
+    </div>
+    <div class="section-body">
+      <table>
+        <thead>
+          <tr>
+            <th>username</th>
+            <th>password</th>
+            <th>deposito_id</th>
+            <th>deposito_nombre</th>
+            <th>rol</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-usuarios"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: DEPÓSITOS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        🏭 Depósitos (config/depositos.json)
+        <span class="badge" id="badge-depositos">cargando...</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-blue" onclick="descargarJSON('depositos', getDepositosData())">⬇ Descargar JSON</button>
+        <button class="btn btn-green" id="btn-copy-depositos" onclick="copiarParaSheets('depositos')">📋 Copiar para Sheets</button>
+      </div>
+    </div>
+    <div class="section-body">
+      <table>
+        <thead>
+          <tr>
+            <th>id</th>
+            <th>nombre</th>
+            <th>color</th>
+            <th>provincias</th>
+            <th>ciudades</th>
+            <th>codigos_postales</th>
+            <th>cp_extra</th>
+            <th>cp_excluir</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-depositos"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: DIRECCIONES FIJAS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        📍 Direcciones Fijas (localStorage: andesmar_fijas)
+        <span class="badge" id="badge-fijas">cargando...</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-blue" onclick="descargarJSON('fijas', getFijasData())">⬇ Descargar JSON</button>
+        <button class="btn btn-green" id="btn-copy-fijas" onclick="copiarParaSheets('fijas')">📋 Copiar para Sheets</button>
+      </div>
+    </div>
+    <div class="section-body">
+      <div id="tabla-fijas-container"></div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: HISTORIAL CORREGIDAS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">
+        🔧 Historial de corregidas (localStorage: andesmar_corregidas)
+        <span class="badge" id="badge-corregidas">cargando...</span>
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-blue" onclick="descargarJSON('corregidas', getCorrecidasData())">⬇ Descargar JSON</button>
+        <button class="btn btn-green" id="btn-copy-corregidas" onclick="copiarParaSheets('corregidas')">📋 Copiar para Sheets</button>
+        <button class="btn btn-orange" onclick="limpiarCorregidas()">🗑 Limpiar historial</button>
+      </div>
+    </div>
+    <div class="section-body">
+      <div id="tabla-corregidas-container"></div>
+    </div>
+  </div>
+
+  <!-- SECCIÓN: TODO JUNTO -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">📦 Exportar TODO (backup completo)</div>
+      <div class="btn-group">
+        <button class="btn btn-blue" onclick="descargarTodo()">⬇ Descargar backup completo (JSON)</button>
+      </div>
+    </div>
+    <div class="section-body">
+      <p style="color:#8b949e; font-size:12px;">
+        Descarga un único archivo JSON con todos los conjuntos de datos: usuarios, depósitos, fijas y corregidas.
+        Útil como respaldo antes de la migración.
+      </p>
+    </div>
+  </div>
+
+<script>
+// ─── DATOS HARDCODEADOS ──────────────────────────────────────────
+const USUARIOS_DATA = {
+  'admin':      { password: 'pdonarce01',   deposito_id: 'all',           deposito_nombre: 'Todos los depósitos', rol: 'admin' },
+  'cndmendoza': { password: 'cdexp2026',    deposito_id: 'cnd_mendoza',   deposito_nombre: 'CND Mendoza',         rol: 'user'  },
+  'cndbsas':    { password: 'cdave2026',    deposito_id: 'cnd_bsas',      deposito_nombre: 'CND Buenos Aires',    rol: 'user'  },
+  'cndtun':     { password: 'cndvalle2026', deposito_id: 'cnd_tunuyan',   deposito_nombre: 'CND Tunuyán',         rol: 'user'  },
+  'cndsanma':   { password: 'cndeste2026',  deposito_id: 'cnd_sanmartin', deposito_nombre: 'CND San Martín',      rol: 'user'  },
+  'cndsur':     { password: 'cndsur2026',   deposito_id: 'cnd_surmen',    deposito_nombre: 'CND Sur Mendoza',     rol: 'user'  },
+  'cndcba':     { password: 'cndcba2026',   deposito_id: 'cnd_cordoba',   deposito_nombre: 'CND Córdoba',         rol: 'user'  },
+  'cndnqn':     { password: 'cndnqn2026',   deposito_id: 'cnd_neuquen',   deposito_nombre: 'CND Neuquén',         rol: 'user'  },
+};
+
+let DEPOSITOS_DATA = null;
+
+// ─── GETTERS ─────────────────────────────────────────────────────
+function getUsuariosData() {
+  return Object.entries(USUARIOS_DATA).map(([username, u]) => ({ username, ...u }));
+}
+function getDepositosData() {
+  return DEPOSITOS_DATA || [];
+}
+function getFijasData() {
+  try { return JSON.parse(localStorage.getItem('andesmar_fijas') || '[]'); } catch { return []; }
+}
+function getCorrecidasData() {
+  try { return JSON.parse(localStorage.getItem('andesmar_corregidas') || '[]'); } catch { return []; }
+}
+
+// ─── RENDER USUARIOS ─────────────────────────────────────────────
+function renderUsuarios() {
+  const tbody = document.getElementById('tabla-usuarios');
+  const data = getUsuariosData();
+  document.getElementById('badge-usuarios').textContent = data.length + ' usuarios';
+  tbody.innerHTML = data.map(u => `
+    <tr>
+      <td class="mono">${u.username}</td>
+      <td class="mono">${u.password}</td>
+      <td class="mono">${u.deposito_id}</td>
+      <td>${u.deposito_nombre}</td>
+      <td class="${u.rol === 'admin' ? 'tag-admin' : 'tag-user'}">${u.rol}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── RENDER DEPÓSITOS ─────────────────────────────────────────────
+async function renderDepositos() {
+  try {
+    const r = await fetch('config/depositos.json');
+    const json = await r.json();
+    DEPOSITOS_DATA = json.depositos;
+  } catch {
+    // fallback inline si fetch falla (abrir como file://)
+    DEPOSITOS_DATA = [{"id":"cnd_bsas","nombre":"CND Buenos Aires","color":"#01feff","reglas":{"provincias":["Buenos Aires","Ciudad Autónoma de Buenos Aires","Ciudad Autonoma de Buenos Aires","CABA","GBA"],"ciudades":["Buenos Aires","Capital Federal","Avellaneda","Lanús","Lanus","Lomas de Zamora","Quilmes","Berazategui","Florencio Varela","Almirante Brown","Esteban Echeverría","Esteban Echeverria","Morón","Moron","Tigre","San Isidro","Vicente López","Vicente Lopez","La Matanza","Merlo","Moreno","San Miguel","Malvinas Argentinas","Tres de Febrero","Hurlingham","Ituzaingó","Ituzaingo","San Justo","Ramos Mejía","Ramos Mejia","Haedo","Ciudadela"],"codigos_postales":[],"codigos_postales_extra":[],"excluir_codigos_postales":[]}},{"id":"cnd_mendoza","nombre":"CND Mendoza","color":"#004993","reglas":{"provincias":["Mendoza"],"ciudades":["Mendoza","Godoy Cruz","Guaymallén","Guaymallen","Las Heras","Maipú","Maipu","Luján de Cuyo","Lujan de Cuyo","Capital","Ciudad de Mendoza"],"codigos_postales":[],"codigos_postales_extra":["5435","5427"],"excluir_codigos_postales":["5600","5620","5613","5602","5604","5612","5570","5584","5585","5573","5577","5579","5590","5582","5589","5560","5561","5567","5565"]}},{"id":"cnd_surmen","nombre":"CND Sur Mendoza","color":"#003481","reglas":{"provincias":[],"ciudades":[],"codigos_postales":["5600","5620","5613","5602","5604","5612"],"codigos_postales_extra":[],"excluir_codigos_postales":[]}},{"id":"cnd_sanmartin","nombre":"CND San Martín","color":"#185FA5","reglas":{"provincias":[],"ciudades":[],"codigos_postales":["5570","5584","5585","5573","5577","5579","5590","5582","5589"],"codigos_postales_extra":[],"excluir_codigos_postales":[]}},{"id":"cnd_tunuyan","nombre":"CND Tunuyán","color":"#0F6E56","reglas":{"provincias":[],"ciudades":[],"codigos_postales":["5560","5561","5567","5565"],"codigos_postales_extra":[],"excluir_codigos_postales":[]}},{"id":"cnd_cordoba","nombre":"CND Córdoba","color":"#BA7517","reglas":{"provincias":["Córdoba","Cordoba"],"ciudades":["Córdoba","Cordoba","Villa Carlos Paz","Río Cuarto","Rio Cuarto","Villa María","Villa Maria","Alta Gracia","Bell Ville","Jesús María","Jesus Maria","San Francisco","Cosquín","Cosquin","La Falda"],"codigos_postales":[],"codigos_postales_extra":[],"excluir_codigos_postales":[]}},{"id":"cnd_neuquen","nombre":"CND Neuquén","color":"#993556","reglas":{"provincias":["Neuquén","Neuquen","Río Negro","Rio Negro"],"ciudades":["Neuquén","Neuquen","Cipolletti","Plottier","Allen","General Roca","Roca","Cinco Saltos","Viedma","Bariloche","San Carlos de Bariloche","Centenario","Vista Alegre"],"codigos_postales":[],"codigos_postales_extra":[],"excluir_codigos_postales":[]}}];
+  }
+  const tbody = document.getElementById('tabla-depositos');
+  document.getElementById('badge-depositos').textContent = DEPOSITOS_DATA.length + ' depósitos';
+  tbody.innerHTML = DEPOSITOS_DATA.map(d => `
+    <tr>
+      <td class="mono">${d.id}</td>
+      <td>${d.nombre}</td>
+      <td><span style="display:inline-block;width:12px;height:12px;background:${d.color};border-radius:2px;vertical-align:middle;margin-right:6px;"></span>${d.color}</td>
+      <td style="max-width:180px;font-size:11px;color:#8b949e">${(d.reglas.provincias||[]).join(', ') || '—'}</td>
+      <td style="max-width:200px;font-size:11px;color:#8b949e">${(d.reglas.ciudades||[]).slice(0,5).join(', ')+(d.reglas.ciudades?.length>5?' …':'')||'—'}</td>
+      <td style="font-size:11px;color:#8b949e">${(d.reglas.codigos_postales||[]).join(', ')||'—'}</td>
+      <td style="font-size:11px;color:#8b949e">${(d.reglas.codigos_postales_extra||[]).join(', ')||'—'}</td>
+      <td style="font-size:11px;color:#8b949e">${(d.reglas.excluir_codigos_postales||[]).join(', ')||'—'}</td>
+    </tr>
+  `).join('');
+}
+
+// ─── RENDER FIJAS ─────────────────────────────────────────────────
+function renderFijas() {
+  const container = document.getElementById('tabla-fijas-container');
+  const data = getFijasData();
+  document.getElementById('badge-fijas').textContent = data.length + ' registros';
+  if (!data.length) {
+    container.innerHTML = '<p class="empty-msg">No hay direcciones fijas en este equipo.</p>';
+    return;
+  }
+  const cols = ['id','nombre_referencia','address1','city','zip_code','lat','lng','deposito_id','veces_usada','fecha_creacion'];
+  container.innerHTML = `
+    <table>
+      <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+      <tbody>${data.map(f => `<tr>${cols.map(c =>
+        `<td class="${['lat','lng','id'].includes(c)?'mono':''}">${f[c] ?? '—'}</td>`
+      ).join('')}</tr>`).join('')}</tbody>
+    </table>`;
+}
+
+// ─── RENDER CORREGIDAS ────────────────────────────────────────────
+function renderCorregidas() {
+  const container = document.getElementById('tabla-corregidas-container');
+  const data = getCorrecidasData();
+  document.getElementById('badge-corregidas').textContent = data.length + ' registros';
+  if (!data.length) {
+    container.innerHTML = '<p class="empty-msg">No hay historial de corregidas en este equipo.</p>';
+    return;
+  }
+  const cols = ['code','address1_original','city_original','lat_nueva','lng_nueva','deposito_id','usuario','fecha_correccion','estado_envio'];
+  container.innerHTML = `
+    <table>
+      <thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+      <tbody>${data.slice(0,100).map(f => `<tr>${cols.map(c =>
+        `<td class="${['lat_nueva','lng_nueva'].includes(c)?'mono':''}" style="font-size:11px;">${f[c] ?? '—'}</td>`
+      ).join('')}</tr>`).join('')}</tbody>
+    </table>
+    ${data.length > 100 ? `<p style="color:#8b949e;font-size:12px;margin-top:8px;">Mostrando primeros 100 de ${data.length}. El JSON descargado incluye todos.</p>` : ''}`;
+}
+
+// ─── DESCARGAR JSON ────────────────────────────────────────────────
+function descargarJSON(nombre, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `andesmar_${nombre}_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+}
+
+function descargarTodo() {
+  const backup = {
+    exportado: new Date().toISOString(),
+    usuarios: getUsuariosData(),
+    depositos: getDepositosData(),
+    fijas: getFijasData(),
+    corregidas: getCorrecidasData()
+  };
+  descargarJSON('backup_completo', backup);
+}
+
+// ─── COPIAR PARA GOOGLE SHEETS ────────────────────────────────────
+const sheetFormatters = {
+  usuarios: () => {
+    const rows = [['username','password','deposito_id','deposito_nombre','rol']];
+    getUsuariosData().forEach(u => rows.push([u.username, u.password, u.deposito_id, u.deposito_nombre, u.rol]));
+    return rows;
+  },
+  depositos: () => {
+    const rows = [['id','nombre','color','provincias','ciudades','codigos_postales','codigos_postales_extra','excluir_codigos_postales']];
+    getDepositosData().forEach(d => rows.push([
+      d.id, d.nombre, d.color,
+      (d.reglas.provincias||[]).join('; '),
+      (d.reglas.ciudades||[]).join('; '),
+      (d.reglas.codigos_postales||[]).join('; '),
+      (d.reglas.codigos_postales_extra||[]).join('; '),
+      (d.reglas.excluir_codigos_postales||[]).join('; ')
+    ]));
+    return rows;
+  },
+  fijas: () => {
+    const cols = ['id','nombre_referencia','address1','city','zip_code','lat','lng','deposito_id','veces_usada','fecha_creacion'];
+    const rows = [cols];
+    getFijasData().forEach(f => rows.push(cols.map(c => f[c] ?? '')));
+    return rows;
+  },
+  corregidas: () => {
+    const cols = ['code','address1_original','city_original','lat_nueva','lng_nueva','deposito_id','usuario','fecha_correccion','estado_envio','error_detalle'];
+    const rows = [cols];
+    getCorrecidasData().forEach(f => rows.push(cols.map(c => f[c] ?? '')));
+    return rows;
+  }
+};
+
+function copiarParaSheets(seccion) {
+  const rows = sheetFormatters[seccion]();
+  const tsv = rows.map(r => r.map(v => String(v).replace(/\t/g,' ')).join('\t')).join('\n');
+  navigator.clipboard.writeText(tsv).then(() => {
+    const btn = document.getElementById('btn-copy-' + seccion);
+    btn.textContent = '✅ ¡Copiado!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = '📋 Copiar para Sheets';
+      btn.classList.remove('copied');
+    }, 2500);
+  }).catch(() => {
+    // fallback: mostrar textarea
+    const ta = document.createElement('textarea');
+    ta.value = tsv;
+    ta.style.cssText = 'position:fixed;top:20px;left:20px;right:20px;height:300px;z-index:9999;background:#0d1117;color:#e6edf3;font-size:11px;border:2px solid #f0883e;border-radius:6px;padding:10px;';
+    ta.title = 'Copiá este texto y pegalo en Google Sheets (Ctrl+A → Ctrl+C)';
+    document.body.appendChild(ta);
+    ta.select();
+    const close = () => ta.remove();
+    ta.addEventListener('blur', close);
+    alert('No se pudo copiar automáticamente. Seleccioná todo el texto del cuadro que aparece y copialo manualmente.');
+  });
+}
+
+// ─── LIMPIAR CORREGIDAS ───────────────────────────────────────────
+function limpiarCorregidas() {
+  if (!confirm('¿Seguro? Esto borrará el historial de corregidas de ESTA computadora. Los datos ya descargados no se pierden.')) return;
+  localStorage.removeItem('andesmar_corregidas');
+  renderCorregidas();
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────
+renderUsuarios();
+renderDepositos().then(() => {});
+renderFijas();
+renderCorregidas();
+</script>
+</body>
+</html>

@@ -79,10 +79,18 @@ function asignarDeposito(addr, depositos) {
 function getCorregidas() {
   try { return JSON.parse(localStorage.getItem(CORREGIDAS_KEY) || '[]'); } catch { return []; }
 }
+const MAX_CORREGIDAS = 300;
 function addCorregida(item) {
   const list = getCorregidas();
   list.unshift(item);
-  localStorage.setItem(CORREGIDAS_KEY, JSON.stringify(list));
+  if (list.length > MAX_CORREGIDAS) list.splice(MAX_CORREGIDAS);
+  try {
+    localStorage.setItem(CORREGIDAS_KEY, JSON.stringify(list));
+  } catch {
+    // Si aún excede la cuota, limpiar a la mitad más reciente
+    const mitad = list.slice(0, Math.floor(list.length / 2));
+    try { localStorage.setItem(CORREGIDAS_KEY, JSON.stringify(mitad)); } catch { /* ignorar */ }
+  }
 }
 
 // ══════════════════════════════════════════════════════════
