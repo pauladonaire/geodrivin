@@ -1,8 +1,9 @@
 /* ============================================================
-   auth.js — Autenticación local (sin backend)
+   auth.js — Autenticación (lee usuarios desde Google Sheets)
    ============================================================ */
 
-const USUARIOS = {
+// Usuarios de respaldo (solo se usan si no hay config.js o USUARIOS_SHEET_ID)
+const _USUARIOS_FALLBACK = {
   'admin':      { password: 'pdonarce01',   deposito_id: 'all',           deposito_nombre: 'Todos los depósitos', rol: 'admin' },
   'cndmendoza': { password: 'cdexp2026',    deposito_id: 'cnd_mendoza',   deposito_nombre: 'CND Mendoza',         rol: 'user'  },
   'cndbsas':    { password: 'cdave2026',    deposito_id: 'cnd_bsas',      deposito_nombre: 'CND Buenos Aires',    rol: 'user'  },
@@ -12,6 +13,35 @@ const USUARIOS = {
   'cndcba':     { password: 'cndcba2026',   deposito_id: 'cnd_cordoba',   deposito_nombre: 'CND Córdoba',         rol: 'user'  },
   'cndnqn':     { password: 'cndnqn2026',   deposito_id: 'cnd_neuquen',   deposito_nombre: 'CND Neuquén',         rol: 'user'  },
 };
+
+let _usuariosCache = null;
+
+async function _cargarUsuarios() {
+  if (_usuariosCache) return _usuariosCache;
+  const sheetId = (typeof CONFIG !== 'undefined') ? CONFIG.USUARIOS_SHEET_ID : null;
+  if (sheetId) {
+    try {
+      const { rows } = await Sheets.leerSheet(sheetId);
+      _usuariosCache = {};
+      rows.forEach(r => {
+        if (r.username) {
+          _usuariosCache[r.username] = {
+            password:        r.password        || '',
+            deposito_id:     r.deposito_id     || '',
+            deposito_nombre: r.deposito_nombre || '',
+            rol:             r.rol             || 'user',
+          };
+        }
+      });
+    } catch (err) {
+      console.error('[Auth] Error cargando usuarios desde Sheets:', err);
+      _usuariosCache = _USUARIOS_FALLBACK;
+    }
+  } else {
+    _usuariosCache = _USUARIOS_FALLBACK;
+  }
+  return _usuariosCache;
+}
 
 const Auth = (() => {
   const SESSION_KEY = 'andesmar_session';
@@ -62,7 +92,7 @@ if (loginForm) {
     window.location.href = 'dashboard.html';
   }
 
-  loginForm.addEventListener('submit', (e) => {
+  loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn     = document.getElementById('btn-login');
     const errorEl = document.getElementById('login-error');
@@ -70,15 +100,23 @@ if (loginForm) {
     const password = document.getElementById('input-password').value;
 
     btn.disabled = true;
-    btn.textContent = 'Ingresando...';
+    btn.textContent = 'Verificando...';
     errorEl.classList.remove('visible');
 
-    const u = USUARIOS[username];
-    if (u && u.password === password) {
-      Auth.saveSession({ id: username, username, ...u });
-      window.location.href = 'dashboard.html';
-    } else {
-      errorEl.textContent = 'Usuario o contraseña incorrectos.';
+    try {
+      const usuarios = await _cargarUsuarios();
+      const u = usuarios[username];
+      if (u && u.password === password) {
+        Auth.saveSession({ id: username, username, ...u });
+        window.location.href = 'dashboard.html';
+      } else {
+        errorEl.textContent = 'Usuario o contraseña incorrectos.';
+        errorEl.classList.add('visible');
+        btn.disabled = false;
+        btn.textContent = 'Ingresar';
+      }
+    } catch {
+      errorEl.textContent = 'Error de conexión. Intentá de nuevo.';
       errorEl.classList.add('visible');
       btn.disabled = false;
       btn.textContent = 'Ingresar';

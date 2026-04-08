@@ -1,83 +1,120 @@
 /* ============================================================
-   direccionesFijas.js — CRUD de direcciones fijas (localStorage)
+   direccionesFijas.js — CRUD de direcciones fijas (Google Sheets)
    ============================================================ */
 
 const DireccionesFijas = (() => {
-  const FIJAS_KEY = 'andesmar_fijas';
+
+  // ── Columnas del Sheet (orden exacto) ─────────────────────
+  const HEADERS = ['id','nombre_referencia','address1','city','zip_code','lat','lng','deposito_id','veces_usada','fecha_creacion'];
+
   let fijas = [];
   let selectedFijaId = null;
 
-  function _load() {
-    try {
-      const todas = JSON.parse(localStorage.getItem(FIJAS_KEY) || '[]');
+  // ── Config helpers ─────────────────────────────────────────
+  function _sheetId()  { return (typeof CONFIG !== 'undefined') ? CONFIG.FIJAS_SHEET_ID  : null; }
+  function _sheetTab() { return (typeof CONFIG !== 'undefined') ? (CONFIG.FIJAS_SHEET_TAB || 'Fijas') : 'Fijas'; }
+
+  // ── Conversión objeto ↔ fila ──────────────────────────────
+  function _rowToFija(r) {
+    return {
+      id:                String(r.id || ''),
+      nombre_referencia: r.nombre_referencia || '',
+      address1:          r.address1  || null,
+      city:              r.city      || null,
+      zip_code:          r.zip_code  || null,
+      lat:               r.lat  ? parseFloat(r.lat)  : null,
+      lng:               r.lng  ? parseFloat(r.lng)  : null,
+      deposito_id:       r.deposito_id || null,
+      veces_usada:       r.veces_usada ? parseInt(r.veces_usada) : 0,
+      fecha_creacion:    r.fecha_creacion || '',
+    };
+  }
+
+  function _fijaToRow(f) {
+    return HEADERS.map(h => (f[h] !== null && f[h] !== undefined) ? String(f[h]) : '');
+  }
+
+  // ── Escribir todo el array fijas al Sheet ─────────────────
+  async function _guardar() {
+    const sheetId = _sheetId();
+    if (!sheetId) {
+      // Sin config → guardar en localStorage como fallback
+      localStorage.setItem('andesmar_fijas', JSON.stringify(fijas));
+      return;
+    }
+    await Sheets.sobreescribirSheet(sheetId, _sheetTab(), HEADERS, fijas.map(_fijaToRow));
+  }
+
+  // ── Cargar desde Sheets (o localStorage como fallback) ────
+  async function cargar() {
+    const sheetId = _sheetId();
+    if (sheetId) {
+      const { rows } = await Sheets.leerSheet(sheetId);
+      const todasSheets = rows.filter(r => r.id).map(_rowToFija);
       const user = Auth.getUser();
       fijas = (user?.rol === 'admin')
-        ? todas
-        : todas.filter(f => !f.deposito_id || f.deposito_id === user?.deposito_id);
-    } catch { fijas = []; }
-    return fijas;
-  }
-
-  function _loadTodas() {
-    try { return JSON.parse(localStorage.getItem(FIJAS_KEY) || '[]'); } catch { return []; }
-  }
-
-  function _save() {
-    // Preservar fijas de otros depósitos al guardar
-    const user = Auth.getUser();
-    if (user?.rol === 'admin') {
-      localStorage.setItem(FIJAS_KEY, JSON.stringify(fijas));
+        ? todasSheets
+        : todasSheets.filter(f => !f.deposito_id || f.deposito_id === user?.deposito_id);
     } else {
-      const otras = _loadTodas().filter(f => f.deposito_id && f.deposito_id !== user?.deposito_id);
-      localStorage.setItem(FIJAS_KEY, JSON.stringify([...otras, ...fijas]));
+      // Fallback localStorage
+      try {
+        const todas = JSON.parse(localStorage.getItem('andesmar_fijas') || '[]');
+        const user = Auth.getUser();
+        // Normalizar IDs a string para consistencia
+        const todasStr = todas.map(f => ({ ...f, id: String(f.id) }));
+        fijas = (user?.rol === 'admin')
+          ? todasStr
+          : todasStr.filter(f => !f.deposito_id || f.deposito_id === user?.deposito_id);
+      } catch { fijas = []; }
     }
-  }
-
-  async function cargar() {
-    return _load();
+    return fijas;
   }
 
   function getAll() { return fijas; }
 
+  // ── CRUD ───────────────────────────────────────────────────
   async function crear(datos) {
-    _load();
     const nuevo = {
-      id: Date.now(),
+      id:                String(Date.now()),
       nombre_referencia: datos.nombre_referencia,
-      address1:    datos.address1    || null,
-      city:        datos.city        || null,
-      zip_code:    datos.zip_code    || null,
-      lat:         parseFloat(datos.lat),
-      lng:         parseFloat(datos.lng),
-      deposito_id: datos.deposito_id || null,
-      veces_usada: 0,
-      fecha_creacion: new Date().toISOString()
+      address1:          datos.address1    || null,
+      city:              datos.city        || null,
+      zip_code:          datos.zip_code    || null,
+      lat:               parseFloat(datos.lat),
+      lng:               parseFloat(datos.lng),
+      deposito_id:       datos.deposito_id || null,
+      veces_usada:       0,
+      fecha_creacion:    new Date().toISOString(),
     };
     fijas.push(nuevo);
-    _save();
+    await _guardar();
     return nuevo;
   }
 
   async function actualizar(id, datos) {
-    _load();
-    const idx = fijas.findIndex(f => f.id === id);
+    const sid = String(id);
+    const idx = fijas.findIndex(f => String(f.id) === sid);
     if (idx < 0) throw new Error('No encontrada');
-    fijas[idx] = { ...fijas[idx], ...datos };
-    _save();
+    fijas[idx] = { ...fijas[idx], ...datos, id: sid };
+    await _guardar();
   }
 
   async function eliminar(id) {
-    _load();
-    fijas = fijas.filter(f => f.id !== id);
-    _save();
+    const sid = String(id);
+    fijas = fijas.filter(f => String(f.id) !== sid);
+    await _guardar();
   }
 
   async function registrarUso(id) {
-    _load();
-    const f = fijas.find(f => f.id === id);
-    if (f) { f.veces_usada = (f.veces_usada || 0) + 1; _save(); }
+    const sid = String(id);
+    const f = fijas.find(f => String(f.id) === sid);
+    if (f) {
+      f.veces_usada = (f.veces_usada || 0) + 1;
+      await _guardar();
+    }
   }
 
+  // ── Render tabla de gestión ────────────────────────────────
   function renderTabla() {
     const tbody = document.getElementById('fijas-tbody');
     const empty = document.getElementById('fijas-empty');
@@ -102,20 +139,20 @@ const DireccionesFijas = (() => {
         <td><span class="badge badge-cyan">${f.veces_usada || 0}x</span></td>
         <td>
           <div style="display:flex;gap:4px;">
-            <button class="btn btn-ghost btn-sm" onclick="DireccionesFijas.openEditModal(${f.id})">Editar</button>
-            <button class="btn btn-danger btn-sm" onclick="DireccionesFijas.confirmDelete(${f.id})">Eliminar</button>
+            <button class="btn btn-ghost btn-sm" onclick="DireccionesFijas.openEditModal('${esc(f.id)}')">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="DireccionesFijas.confirmDelete('${esc(f.id)}')">Eliminar</button>
           </div>
         </td>
       </tr>
     `).join('');
   }
 
+  // ── Render selector (modal aplicar fija) ──────────────────
   function renderSelectorList(containerId, onSelect) {
     selectedFijaId = null;
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    // Limpiar buscador al abrir
     const searchInput = document.getElementById('fijas-selector-search');
     if (searchInput) searchInput.value = '';
 
@@ -158,7 +195,6 @@ const DireccionesFijas = (() => {
     _renderCards(fijas);
 
     if (searchInput) {
-      // Reemplazar listener anterior clonando el nodo
       const fresh = searchInput.cloneNode(true);
       searchInput.parentNode.replaceChild(fresh, searchInput);
       fresh.addEventListener('input', () => {
@@ -188,11 +224,12 @@ const DireccionesFijas = (() => {
 
   function getSelected() {
     if (!selectedFijaId) return null;
-    return fijas.find(f => f.id === selectedFijaId) || null;
+    return fijas.find(f => String(f.id) === String(selectedFijaId)) || null;
   }
 
   function openEditModal(id) {
-    const fija = fijas.find(f => f.id === id);
+    const sid = String(id);
+    const fija = fijas.find(f => String(f.id) === sid);
     if (!fija) return;
     document.getElementById('fija-nombre').value   = fija.nombre_referencia || '';
     document.getElementById('fija-address1').value = fija.address1  || '';
@@ -201,21 +238,21 @@ const DireccionesFijas = (() => {
     document.getElementById('fija-lat').value      = fija.lat       || '';
     document.getElementById('fija-lng').value      = fija.lng       || '';
     const modal = document.getElementById('modal-nueva-fija');
-    modal.dataset.editId = id;
+    modal.dataset.editId = sid;
     modal.querySelector('.modal-title').textContent = 'Editar dirección fija';
-    // Notificar a dashboard para que configure el campo depósito
     modal.dataset.editDepositoId = fija.deposito_id || '';
     modal.dispatchEvent(new CustomEvent('fija-edit-open', { detail: { depositoId: fija.deposito_id || null } }));
     modal.classList.add('active');
   }
 
   function confirmDelete(id) {
-    const fija = fijas.find(f => f.id === id);
+    const sid = String(id);
+    const fija = fijas.find(f => String(f.id) === sid);
     if (!fija) return;
     if (!confirm(`¿Eliminar "${fija.nombre_referencia}"?`)) return;
-    eliminar(id)
+    eliminar(sid)
       .then(() => { renderTabla(); Toast.success('Dirección fija eliminada'); })
-      .catch(() => Toast.error('Error al eliminar'));
+      .catch(err => Toast.error('Error al eliminar: ' + err.message));
   }
 
   function esc(str) {

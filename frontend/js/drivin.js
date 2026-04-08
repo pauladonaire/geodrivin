@@ -24,14 +24,37 @@ function normalizar(str) {
   return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 }
 
-// ── Cargar depositos.json ──
+// ── Cargar depósitos (desde Google Sheets o fallback a JSON local) ──
 let _depositosCache = null;
 async function getDepositosConfig() {
   if (_depositosCache) return _depositosCache;
-  const r = await fetch('./config/depositos.json');
-  const data = await r.json();
-  _depositosCache = data.depositos;
+  const sheetId = (typeof CONFIG !== 'undefined') ? CONFIG.DEPOSITOS_SHEET_ID : null;
+  if (sheetId) {
+    const { rows } = await Sheets.leerSheet(sheetId);
+    _depositosCache = rows.map(r => ({
+      id:     r.id,
+      nombre: r.nombre,
+      color:  r.color,
+      reglas: {
+        provincias:                _split(r.provincias),
+        ciudades:                  _split(r.ciudades),
+        codigos_postales:          _split(r.codigos_postales),
+        codigos_postales_extra:    _split(r.codigos_postales_extra),
+        excluir_codigos_postales:  _split(r.excluir_codigos_postales),
+      }
+    }));
+  } else {
+    // Fallback: leer desde JSON local
+    const res = await fetch('./config/depositos.json');
+    const data = await res.json();
+    _depositosCache = data.depositos;
+  }
   return _depositosCache;
+}
+
+function _split(val) {
+  if (!val) return [];
+  return val.split(';').map(s => s.trim()).filter(Boolean);
 }
 
 // ── Asignar depósito a una dirección ──
