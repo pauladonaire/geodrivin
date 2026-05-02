@@ -437,8 +437,8 @@
     document.getElementById('geo-search-input').value = `${dir.address1 || ''} ${dir.city || ''}`.trim();
     document.getElementById('geo-autocomplete').innerHTML = '';
     document.getElementById('geo-autocomplete').classList.remove('visible');
-    document.getElementById('result-lat').textContent = '—';
-    document.getElementById('result-lng').textContent = '—';
+    document.getElementById('result-lat').value = '';
+    document.getElementById('result-lng').value = '';
     document.getElementById('result-precision').textContent = '—';
 
     const btnEnviar = document.getElementById('btn-geo-enviar');
@@ -460,8 +460,8 @@
 
     // Si tiene coords aprox, mostrar en resultado
     if (dir.lat && dir.lng) {
-      document.getElementById('result-lat').textContent = parseFloat(dir.lat).toFixed(6);
-      document.getElementById('result-lng').textContent = parseFloat(dir.lng).toFixed(6);
+      document.getElementById('result-lat').value = parseFloat(dir.lat).toFixed(6);
+      document.getElementById('result-lng').value = parseFloat(dir.lng).toFixed(6);
       document.getElementById('result-precision').textContent = 'Aproximada';
       document.getElementById('result-precision').style.color = '#F59E0B';
     }
@@ -478,6 +478,17 @@
       }
     });
   }
+
+  // Edición directa de lat/lng — mueve el pin igual que el desplegable
+  function onCoordInputChange() {
+    const latVal = parseFloat(document.getElementById('result-lat').value);
+    const lngVal = parseFloat(document.getElementById('result-lng').value);
+    if (!isNaN(latVal) && !isNaN(lngVal)) {
+      Mapa.setGeoPin(latVal, lngVal, 'Manual');
+    }
+  }
+  document.getElementById('result-lat').addEventListener('change', onCoordInputChange);
+  document.getElementById('result-lng').addEventListener('change', onCoordInputChange);
 
   document.getElementById('modal-geo-close').addEventListener('click', () => {
     document.getElementById('modal-geo').classList.remove('active');

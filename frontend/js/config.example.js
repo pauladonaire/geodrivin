@@ -21,7 +21,7 @@ const CONFIG = {
   //  4. Autorizá los permisos cuando te lo pida
   //  5. Copiá la URL de la implementación (termina en /exec)
   //  6. Pegala como valor de APPS_SCRIPT_URL abajo
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/TU_ID_ACA/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwxGBg8eD6u8r6YVpRR9VgkvqCqsIMjPvyJ76k1Y084kKRIZTVGeHDaL9-sMZfyU7z0/exec',
 
   // ── IDs de los Google Sheets ───────────────────────────────
   // Encontrás el ID en la URL del Sheet:

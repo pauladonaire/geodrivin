@@ -81,8 +81,8 @@ const Mapa = (() => {
     const latEl  = document.getElementById('result-lat');
     const lngEl  = document.getElementById('result-lng');
     const precEl = document.getElementById('result-precision');
-    if (latEl)  latEl.textContent  = lat.toFixed(6);
-    if (lngEl)  lngEl.textContent  = lng.toFixed(6);
+    if (latEl)  latEl.value = lat.toFixed(6);
+    if (lngEl)  lngEl.value = lng.toFixed(6);
     if (precEl) {
       precEl.textContent = precision || '—';
       precEl.style.color = precision === 'Alta' ? '#22C55E' :

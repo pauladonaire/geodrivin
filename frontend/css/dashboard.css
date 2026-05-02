@@ -691,6 +691,35 @@ input[type="checkbox"]:checked::after {
   color: var(--cyan);
 }
 
+/* Inputs editables de lat/lng en modal geo */
+.coord-input-editable {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(1,254,255,0.25);
+  border-radius: 0;
+  padding: 0;
+  width: 100%;
+  text-align: center;
+  cursor: text;
+  -moz-appearance: textfield;
+}
+
+.coord-input-editable:focus {
+  outline: none;
+  border-bottom-color: var(--cyan);
+  background: rgba(1,254,255,0.04);
+}
+
+.coord-input-editable::placeholder {
+  color: rgba(255,255,255,0.3);
+  font-weight: normal;
+}
+
+.coord-input-editable::-webkit-outer-spin-button,
+.coord-input-editable::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
 /* ── Modal Fijas ── */
 .fijas-table-wrapper {
   overflow-x: auto;
