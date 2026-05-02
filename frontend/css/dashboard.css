@@ -693,25 +693,25 @@ input[type="checkbox"]:checked::after {
 
 /* Inputs editables de lat/lng en modal geo */
 .coord-input-editable {
-  background: transparent;
-  border: none;
-  border-bottom: 1px solid rgba(1,254,255,0.25);
-  border-radius: 0;
-  padding: 0;
+  background: rgba(255,255,255,0.92);
+  border: 1px solid rgba(1,254,255,0.35);
+  border-radius: 4px;
+  padding: 2px 4px;
   width: 100%;
   text-align: center;
   cursor: text;
+  color: #111;
   -moz-appearance: textfield;
 }
 
 .coord-input-editable:focus {
   outline: none;
-  border-bottom-color: var(--cyan);
-  background: rgba(1,254,255,0.04);
+  border-color: var(--cyan);
+  background: #fff;
 }
 
 .coord-input-editable::placeholder {
-  color: rgba(255,255,255,0.3);
+  color: #999;
   font-weight: normal;
 }
 

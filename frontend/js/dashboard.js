@@ -433,38 +433,44 @@
       coordsEl.className = 'geo-field-value sin-coords';
     }
 
+    // Mejor coord disponible (corregida > aproximada)
+    const initLat = dir.lat_nueva ?? dir.lat ?? null;
+    const initLng = dir.lng_nueva ?? dir.lng ?? null;
+
     // Reset búsqueda y resultados
     document.getElementById('geo-search-input').value = `${dir.address1 || ''} ${dir.city || ''}`.trim();
     document.getElementById('geo-autocomplete').innerHTML = '';
     document.getElementById('geo-autocomplete').classList.remove('visible');
-    document.getElementById('result-lat').value = '';
-    document.getElementById('result-lng').value = '';
     document.getElementById('result-precision').textContent = '—';
+    document.getElementById('result-precision').style.color = '';
 
     const btnEnviar = document.getElementById('btn-geo-enviar');
     btnEnviar.disabled = true;
 
+    // Pre-llenar inputs con la mejor coord disponible
+    if (initLat !== null && initLng !== null) {
+      document.getElementById('result-lat').value = parseFloat(initLat).toFixed(6);
+      document.getElementById('result-lng').value = parseFloat(initLng).toFixed(6);
+      document.getElementById('result-precision').textContent = 'Aproximada';
+      document.getElementById('result-precision').style.color = '#F59E0B';
+    } else {
+      document.getElementById('result-lat').value = '';
+      document.getElementById('result-lng').value = '';
+    }
+
     document.getElementById('modal-geo').classList.add('active');
     document.getElementById('modal-geo-title').textContent = `Georeferenciación — ${dir.code}`;
 
-    // Inicializar mapa
+    // Inicializar mapa con la mejor coord disponible
     const opts = {
-      lat: dir.lat || null,
-      lng: dir.lng || null,
+      lat: initLat,
+      lng: initLng,
       onCoordsChange: (lat, lng, precision) => {
         state.currentPrecision = precision;
         btnEnviar.disabled = false;
       }
     };
     Mapa.initGeoMap('geo-map', opts);
-
-    // Si tiene coords aprox, mostrar en resultado
-    if (dir.lat && dir.lng) {
-      document.getElementById('result-lat').value = parseFloat(dir.lat).toFixed(6);
-      document.getElementById('result-lng').value = parseFloat(dir.lng).toFixed(6);
-      document.getElementById('result-precision').textContent = 'Aproximada';
-      document.getElementById('result-precision').style.color = '#F59E0B';
-    }
 
     // Inicializar geocoder autocomplete
     Geocoder.initAutocomplete({
