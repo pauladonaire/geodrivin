@@ -694,6 +694,25 @@
                    placeholder="Ej: Av. San Mart&iacute;n 1234, Mendoza" autocomplete="off" />
             <div class="autocomplete-list" id="geo-grupal-autocomplete"></div>
           </div>
+
+          <!-- Selector de dirección fija -->
+          <div style="margin-top:-4px; margin-bottom:4px;">
+            <button class="btn btn-ghost btn-sm" id="btn-grupal-usar-fija" type="button"
+                    style="font-size:11px; opacity:0.8;">
+              &#9733; Usar direcci&oacute;n fija
+            </button>
+          </div>
+          <div id="grupal-fijas-container" style="display:none; flex-direction:column; gap:6px; margin-bottom:8px;
+               border:0.5px solid var(--border-color); border-radius:6px; padding:8px;
+               background:rgba(255,255,255,0.03);">
+            <input type="text" class="form-input" id="grupal-fijas-filter"
+                   placeholder="Filtrar fijas por nombre o direcci&oacute;n..." style="font-size:11px;"
+                   autocomplete="off" />
+            <div id="grupal-fijas-list"
+                 style="max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;">
+            </div>
+          </div>
+
           <div style="position:relative; flex:1; min-height:280px;">
             <div id="geo-grupal-map"></div>
           </div>

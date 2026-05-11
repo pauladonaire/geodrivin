@@ -315,6 +315,7 @@ window.GrupadoModule = GrupadoModule;
                         ? checkedCodes
                         : new Set(grupo.items.map(d => d.code));
     _coordsActuales = null;
+    closeFijasPicker();
 
     const titleEl = document.getElementById('modal-geo-grupal-title');
     if (titleEl) titleEl.textContent = `Georreferenciación grupal — ${grupo.display}`;
@@ -475,6 +476,64 @@ window.GrupadoModule = GrupadoModule;
     _coordsActuales = null;
   }
 
+  // ── Selector de fijas dentro del modal grupal ──
+  async function openFijasPicker() {
+    const container = document.getElementById('grupal-fijas-container');
+    if (!container) return;
+
+    if (container.style.display !== 'none') {
+      closeFijasPicker();
+      return;
+    }
+
+    try {
+      await DireccionesFijas.cargar();
+    } catch { /* usa caché si falla */ }
+
+    renderFijasPicker(DireccionesFijas.getAll());
+    container.style.display = 'flex';
+    document.getElementById('grupal-fijas-filter')?.focus();
+  }
+
+  function closeFijasPicker() {
+    const container = document.getElementById('grupal-fijas-container');
+    if (container) container.style.display = 'none';
+    const filterEl = document.getElementById('grupal-fijas-filter');
+    if (filterEl) filterEl.value = '';
+  }
+
+  function renderFijasPicker(lista) {
+    const listEl = document.getElementById('grupal-fijas-list');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+
+    if (!lista.length) {
+      listEl.innerHTML = '<div class="text-muted text-sm" style="padding:8px;text-align:center;">Sin fijas guardadas.</div>';
+      return;
+    }
+
+    lista.forEach(f => {
+      const el = document.createElement('div');
+      el.style.cssText = 'cursor:pointer;border:0.5px solid var(--border-color);border-radius:4px;padding:8px 12px;transition:background 0.15s;';
+      el.innerHTML = `
+        <div style="font-weight:600;font-size:12px;">${esc(f.nombre_referencia)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
+          <div class="text-muted" style="font-size:11px;">${esc(f.address1 || '')}${f.city ? ' — ' + esc(f.city) : ''}</div>
+          <div style="font-family:monospace;font-size:10px;color:var(--cyan);">${f.lat?.toFixed(5)}, ${f.lng?.toFixed(5)}</div>
+        </div>
+      `;
+      el.addEventListener('mouseenter', () => { el.style.background = 'rgba(1,254,255,0.06)'; el.style.borderColor = 'var(--cyan)'; });
+      el.addEventListener('mouseleave', () => { el.style.background = ''; el.style.borderColor = 'var(--border-color)'; });
+      el.addEventListener('click', () => {
+        if (f.lat == null || f.lng == null) { Toast.warning('Esta fija no tiene coordenadas'); return; }
+        setGrupalPin(f.lat, f.lng, 'Alta');
+        DireccionesFijas.registrarUso(f.id).catch(() => {});
+        closeFijasPicker();
+      });
+      listEl.appendChild(el);
+    });
+  }
+
   // ── Lista de items en el modal ──
   function renderGrupalItems(grupo) {
     const tbody = document.getElementById('grupal-items-tbody');
@@ -618,6 +677,7 @@ window.GrupadoModule = GrupadoModule;
   function cerrarGrupalModal() {
     document.getElementById('modal-geo-grupal')?.classList.remove('active');
     destroyGrupalMap();
+    closeFijasPicker();
     _grupoActual    = null;
     _seleccion      = new Set();
     _coordsActuales = null;
@@ -665,6 +725,17 @@ window.GrupadoModule = GrupadoModule;
     document.getElementById('btn-grupal-ver-resumen')?.addEventListener('click', mostrarResumenGrupal);
     document.getElementById('btn-grupal-atras')?.addEventListener('click', () => setGrupalStep(1));
     document.getElementById('btn-grupal-confirmar')?.addEventListener('click', enviarGrupo);
+
+    document.getElementById('btn-grupal-usar-fija')?.addEventListener('click', openFijasPicker);
+
+    document.getElementById('grupal-fijas-filter')?.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const todas = DireccionesFijas.getAll();
+      const filtradas = !q ? todas : todas.filter(f =>
+        [f.nombre_referencia, f.address1, f.city].filter(Boolean).join(' ').toLowerCase().includes(q)
+      );
+      renderFijasPicker(filtradas);
+    });
 
     document.getElementById('grupal-chk-all')?.addEventListener('change', (e) => {
       document.querySelectorAll('#grupal-items-tbody .grupal-item-chk').forEach(chk => {
