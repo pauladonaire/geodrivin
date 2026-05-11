@@ -104,6 +104,28 @@
         </button>
       </div>
 
+      <!-- Carga masiva por Excel -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Carga masiva</div>
+        <button class="sidebar-fijas-btn" id="btn-show-excel">
+          &#128196; Cargar Excel cliente
+        </button>
+      </div>
+
+      <!-- Vista agrupada -->
+      <div class="sidebar-section">
+        <div class="sidebar-section-title">Agrupación</div>
+        <button class="sidebar-fijas-btn" id="btn-show-agrupado">
+          &#10697; Vista agrupada
+        </button>
+      </div>
+
+      <!-- Estadísticas de agrupación (visible solo en vista agrupada) -->
+      <div class="sidebar-section" id="sidebar-agrupado-stats" style="display:none;">
+        <div class="sidebar-section-title">Resumen de grupos</div>
+        <div id="sidebar-grupos-content" style="display:flex;flex-direction:column;gap:5px;"></div>
+      </div>
+
     </div>
   </aside>
 
@@ -246,6 +268,102 @@
           </div>
         </div>
       </div><!-- /view-fijas -->
+
+      <!-- ─── Vista: CARGA POR EXCEL ─── -->
+      <div id="view-excel" class="view-panel" style="display:none;">
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+          <div>
+            <h2 style="font-size:16px; font-weight:600;">Carga masiva por Excel</h2>
+            <p class="text-muted text-sm">Subí el archivo Excel del cliente para georreferenciar en masa.<br>Solo se procesan las direcciones pendientes <b>de tu depósito</b>.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="btn-excel-volver">&#8592; Volver</button>
+        </div>
+
+        <!-- Selector de formato -->
+        <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:16px;">
+          <label class="form-label">Formato de cliente</label>
+          <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <select class="form-select" id="excel-formato" style="max-width:180px;">
+              <option value="TRF">TRF</option>
+            </select>
+            <span class="text-muted" id="excel-formato-desc" style="font-size:11px;"></span>
+          </div>
+        </div>
+
+        <!-- Dropzone -->
+        <div class="excel-dropzone" id="excel-dropzone">
+          <div class="excel-dropzone-icon">&#128196;</div>
+          <div class="excel-dropzone-title">Arrastrá el archivo Excel acá</div>
+          <div class="excel-dropzone-subtitle">o hacé clic para seleccionarlo (.xlsx)</div>
+          <input type="file" id="excel-file-input" accept=".xlsx,.xls" style="display:none;" />
+        </div>
+
+        <!-- Resumen (se muestra después de procesar) -->
+        <div id="excel-summary" style="display:none;">
+          <div class="excel-summary-header">
+            <span style="font-size:12px; color:rgba(255,255,255,0.4);">Archivo:</span>
+            <span class="excel-filename" id="excel-filename">archivo.xlsx</span>
+          </div>
+          <div class="excel-summary-grid" id="excel-summary-grid"></div>
+          <div class="excel-aplicar-label" id="excel-aplicar-label"></div>
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; align-items:center;">
+            <button class="btn btn-ghost" id="btn-excel-ver-detalle">Ver detalle antes de aplicar</button>
+            <button class="btn btn-cyan" id="btn-excel-aplicar">&#8593; Aplicar y enviar a Driv.in</button>
+            <button class="btn btn-ghost btn-sm" id="btn-excel-reset" style="margin-left:auto; opacity:0.6;">
+              &#8635; Cargar otro archivo
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress durante envío masivo -->
+        <div id="excel-progress" style="display:none; margin-top:16px;">
+          <div class="excel-progress-text" id="excel-progress-text">Enviando&#8230;</div>
+          <div class="excel-progress-bar">
+            <div class="excel-progress-fill" id="excel-progress-fill" style="width:0%;"></div>
+          </div>
+        </div>
+
+      </div><!-- /view-excel -->
+
+      <!-- ─── Vista: AGRUPADA ─── -->
+      <div id="view-agrupado" class="view-panel" style="display:none;">
+
+        <div class="agrupado-header">
+          <div>
+            <h2 style="font-size:16px; font-weight:600;">Vista agrupada</h2>
+            <p class="text-muted text-sm">Agrup&aacute; direcciones pendientes por destinatario o direcci&oacute;n para resolverlas en un solo paso.</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="btn-agrupado-volver">&#8592; Volver</button>
+        </div>
+
+        <!-- Controles -->
+        <div class="agrupado-controls">
+          <div class="agrupado-mode-group">
+            <button class="agrupado-mode-btn active" data-modo="destinatario">Por destinatario</button>
+            <button class="agrupado-mode-btn" data-modo="direccion">Por direcci&oacute;n</button>
+          </div>
+          <select class="form-select" id="agrupado-orden" style="max-width:180px;">
+            <option value="mayor">&#11015; Mayor cantidad</option>
+            <option value="menor">&#11014; Menor cantidad</option>
+            <option value="alfa">A&#8211;Z Alfab&eacute;tico</option>
+          </select>
+          <input type="text" class="form-input" id="agrupado-search"
+                 placeholder="Buscar grupo o registro..." style="max-width:260px;" />
+        </div>
+
+        <!-- Stats resumen -->
+        <div class="agrupado-stats" id="agrupado-stats"></div>
+
+        <!-- Cards de grupos -->
+        <div class="agrupado-list" id="agrupado-list">
+          <div class="empty-state">
+            <div class="empty-state-icon">&#8987;</div>
+            <div class="empty-state-title">Cargando grupos&hellip;</div>
+          </div>
+        </div>
+
+      </div><!-- /view-agrupado -->
 
     </div><!-- /main-inner -->
   </main><!-- /main-content -->
@@ -497,12 +615,146 @@
 </div>
 
 
+<!-- Modal: Vista previa Excel -->
+<div class="modal-overlay" id="modal-excel-preview" role="dialog" aria-modal="true" aria-labelledby="modal-excel-title">
+  <div class="modal" style="max-width:940px;">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-excel-title">Vista previa &#8212; Coincidencias encontradas</span>
+      <button class="modal-close" id="modal-excel-close" aria-label="Cerrar">&#10005;</button>
+    </div>
+    <div class="modal-body" style="padding:16px;">
+      <p class="text-muted text-sm" style="margin-bottom:10px;">
+        Los matches <b>dudosos</b> (email no coincide) vienen deseleccionados por defecto. Revisalos antes de enviar.
+      </p>
+      <div class="table-scroll" style="max-height:430px;">
+        <table id="excel-preview-table" style="width:100%; min-width:700px;">
+          <thead>
+            <tr>
+              <th class="col-check"><input type="checkbox" id="excel-chk-all" /></th>
+              <th>N&uacute;mero</th>
+              <th>Nombre</th>
+              <th>Direcci&oacute;n</th>
+              <th>Email Excel</th>
+              <th>Lat nueva</th>
+              <th>Lng nueva</th>
+              <th>Match</th>
+            </tr>
+          </thead>
+          <tbody id="excel-preview-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-excel-preview-cancelar">Cancelar</button>
+      <button class="btn btn-cyan" id="btn-excel-preview-enviar">&#8593; Enviar seleccionadas a Driv.in</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal: Georeferenciación grupal -->
+<div class="modal-overlay" id="modal-geo-grupal" role="dialog" aria-modal="true" aria-labelledby="modal-geo-grupal-title">
+  <div class="modal" style="max-width:1100px;">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-geo-grupal-title">Georreferenciaci&oacute;n grupal</span>
+      <button class="modal-close" id="modal-geo-grupal-close" aria-label="Cerrar">&#10005;</button>
+    </div>
+
+    <!-- PASO 1: Mapa + lista de items -->
+    <div id="grupal-step-geo" style="padding:0;">
+      <div class="geo-modal-body">
+
+        <!-- Panel izquierdo: registros del grupo -->
+        <div class="geo-panel-left" style="padding:20px; border-right:0.5px solid var(--border-color); display:flex; flex-direction:column; gap:10px;">
+          <div style="font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em; color:rgba(255,255,255,0.35);">
+            Registros del grupo
+          </div>
+          <div class="table-scroll" style="flex:1; max-height:320px;">
+            <table style="width:100%;">
+              <thead>
+                <tr>
+                  <th class="col-check"><input type="checkbox" id="grupal-chk-all" checked /></th>
+                  <th style="font-size:11px;">C&oacute;digo</th>
+                  <th style="font-size:11px;">Direcci&oacute;n</th>
+                  <th style="font-size:11px;">Ciudad</th>
+                  <th style="font-size:11px;">Estado</th>
+                </tr>
+              </thead>
+              <tbody id="grupal-items-tbody"></tbody>
+            </table>
+          </div>
+          <div id="grupal-counter" style="font-size:12px; color:rgba(255,255,255,0.4); border-top:0.5px solid var(--border-color); padding-top:8px;"></div>
+        </div>
+
+        <!-- Panel derecho: buscador + mapa -->
+        <div class="geo-panel-right" style="padding:20px;">
+          <div class="autocomplete-wrapper">
+            <label class="form-label">Buscar direcci&oacute;n</label>
+            <input type="text" class="form-input" id="geo-grupal-search-input"
+                   placeholder="Ej: Av. San Mart&iacute;n 1234, Mendoza" autocomplete="off" />
+            <div class="autocomplete-list" id="geo-grupal-autocomplete"></div>
+          </div>
+          <div style="position:relative; flex:1; min-height:280px;">
+            <div id="geo-grupal-map"></div>
+          </div>
+          <div class="coords-result">
+            <div class="coord-box">
+              <div class="coord-box-label">Latitud</div>
+              <input type="number" class="coord-box-value coord-input-editable" id="grupal-result-lat"
+                     placeholder="—" step="any" title="Editá para mover el pin" />
+            </div>
+            <div class="coord-box">
+              <div class="coord-box-label">Longitud</div>
+              <input type="number" class="coord-box-value coord-input-editable" id="grupal-result-lng"
+                     placeholder="—" step="any" title="Editá para mover el pin" />
+            </div>
+            <div class="coord-box">
+              <div class="coord-box-label">Precisi&oacute;n</div>
+              <div class="coord-box-value" id="grupal-result-precision" style="font-size:11px;">—</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /grupal-step-geo -->
+
+    <!-- PASO 2: Vista previa antes de confirmar -->
+    <div id="grupal-step-preview" style="display:none; padding:20px;">
+      <div id="grupal-preview-title" style="font-size:13px; margin-bottom:12px; color:rgba(255,255,255,0.75);"></div>
+      <div class="table-scroll" style="max-height:380px;">
+        <table style="width:100%;">
+          <thead>
+            <tr>
+              <th style="font-size:11px;">C&oacute;digo</th>
+              <th style="font-size:11px;">Direcci&oacute;n</th>
+              <th style="font-size:11px;">Ciudad</th>
+              <th style="font-size:11px;">Acci&oacute;n</th>
+            </tr>
+          </thead>
+          <tbody id="grupal-preview-tbody"></tbody>
+        </table>
+      </div>
+    </div><!-- /grupal-step-preview -->
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btn-grupal-cancelar">Cancelar</button>
+      <button class="btn btn-ghost" id="btn-grupal-atras" style="display:none;">&#8592; Atr&aacute;s</button>
+      <button class="btn btn-ghost" id="btn-grupal-ver-resumen" disabled>Ver resumen &#8594;</button>
+      <button class="btn btn-cyan" id="btn-grupal-confirmar" style="display:none;" disabled>&#8593; Confirmar y enviar</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- Toast container -->
 <div id="toast-container"></div>
 
 
 <!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- SheetJS — procesamiento de Excel en el browser -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script src="js/toast.js"></script>
 <script src="js/config.js"></script>
 <script src="js/sheets.js"></script>
@@ -512,6 +764,8 @@
 <script src="js/pendientesSheet.js"></script>
 <script src="js/drivin.js"></script>
 <script src="js/direccionesFijas.js"></script>
+<script src="js/agrupado.js"></script>
+<script src="js/excel.js"></script>
 <script src="js/dashboard.js"></script>
 
 </body>

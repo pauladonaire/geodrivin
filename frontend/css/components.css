@@ -274,3 +274,319 @@
   inset: 0;
   z-index: 1000;
 }
+
+/* ══════════════════════════════════════════════════════════
+   MÓDULO EXCEL — Carga masiva por Excel de cliente
+══════════════════════════════════════════════════════════ */
+
+/* ── Dropzone ── */
+.excel-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 48px 24px;
+  border: 1.5px dashed rgba(1,254,255,0.35);
+  border-radius: 10px;
+  background: rgba(0,73,147,0.06);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+  min-height: 180px;
+}
+
+.excel-dropzone:hover,
+.excel-dropzone.dragover {
+  border-color: var(--cyan);
+  background: rgba(1,254,255,0.06);
+}
+
+.excel-dropzone.loading {
+  border-color: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.03);
+  cursor: default;
+  pointer-events: none;
+}
+
+.excel-dropzone-icon  { font-size: 40px; opacity: 0.7; }
+
+.excel-dropzone-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+}
+
+.excel-dropzone-subtitle {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+}
+
+/* ── Resumen post-proceso ── */
+.excel-summary-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.excel-filename {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--cyan);
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.excel-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* ── Tarjetas de estadísticas ── */
+.excel-stat-card {
+  background: rgba(255,255,255,0.04);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.excel-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.9);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.excel-stat-label {
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.3;
+}
+
+.excel-stat-card.green  { border-color: rgba(34,197,94,0.3);   background: rgba(34,197,94,0.06);   }
+.excel-stat-card.green  .excel-stat-value { color: #22C55E; }
+.excel-stat-card.yellow { border-color: rgba(234,179,8,0.3);   background: rgba(234,179,8,0.06);   }
+.excel-stat-card.yellow .excel-stat-value { color: #EAB308; }
+.excel-stat-card.orange { border-color: rgba(245,158,11,0.3);  background: rgba(245,158,11,0.06);  }
+.excel-stat-card.orange .excel-stat-value { color: #F59E0B; }
+.excel-stat-card.red    { border-color: rgba(239,68,68,0.3);   background: rgba(239,68,68,0.06);   }
+.excel-stat-card.red    .excel-stat-value { color: #EF4444; }
+
+/* ── Etiqueta de confirmación ── */
+.excel-aplicar-label {
+  font-size: 13px;
+  color: rgba(255,255,255,0.65);
+  margin-bottom: 4px;
+}
+
+/* ── Barra de progreso del envío masivo ── */
+.excel-progress-text {
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 10px;
+}
+
+.excel-progress-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.excel-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--cyan));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+/* ══════════════════════════════════════════════════════════
+   MÓDULO AGRUPADO — Vista agrupada de pendientes
+══════════════════════════════════════════════════════════ */
+
+/* ── Header de la vista ── */
+.agrupado-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Barra de controles ── */
+.agrupado-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+/* ── Selector de modo (toggle) ── */
+.agrupado-mode-group {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 0.5px solid rgba(255,255,255,0.12);
+  flex-shrink: 0;
+}
+
+.agrupado-mode-btn {
+  padding: 6px 14px;
+  font-size: 13px;
+  background: transparent;
+  color: rgba(255,255,255,0.5);
+  transition: background 0.15s, color 0.15s;
+  border-right: 0.5px solid rgba(255,255,255,0.12);
+}
+.agrupado-mode-btn:last-child { border-right: none; }
+.agrupado-mode-btn.active     { background: var(--primary); color: var(--white); }
+.agrupado-mode-btn:hover:not(.active) { background: rgba(255,255,255,0.06); color: var(--white); }
+
+/* ── Barra de stats en la vista ── */
+.agrupado-stats {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.02);
+  border: 0.5px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.agrupado-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.agrupado-stat-label { color: rgba(255,255,255,0.38); }
+.agrupado-stat-value { font-weight: 600; color: rgba(255,255,255,0.85); }
+.agrupado-stat-sub   { color: rgba(255,255,255,0.28); }
+
+/* ── Stats en el sidebar ── */
+.sidebar-grupo-stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  padding: 2px 0;
+}
+
+/* ── Lista de cards ── */
+.agrupado-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Card de grupo ── */
+.grupo-card {
+  background: rgba(255,255,255,0.03);
+  border: 0.5px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.grupo-card:hover { border-color: rgba(255,255,255,0.14); }
+
+.grupo-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 16px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.grupo-card-header:hover { background: rgba(255,255,255,0.025); }
+
+.grupo-card-toggle {
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  flex-shrink: 0;
+  width: 12px;
+  text-align: center;
+}
+
+.grupo-card-info { flex: 1; min-width: 0; }
+
+.grupo-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.grupo-card-badges {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.grupo-card-count {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-right: 4px;
+}
+
+/* ── Cuerpo colapsable ── */
+.grupo-card-body {
+  border-top: 0.5px solid rgba(255,255,255,0.06);
+  overflow-x: auto;
+}
+
+/* ── Tabla interna del grupo ── */
+.grupo-inner-table {
+  width: 100%;
+  font-size: 12px;
+}
+
+.grupo-inner-table thead th {
+  padding: 7px 12px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(255,255,255,0.02);
+  color: rgba(255,255,255,0.35);
+}
+
+.grupo-inner-table tbody td { padding: 6px 12px; }
+.grupo-inner-table tbody tr:hover td { background: rgba(255,255,255,0.025); }
+
+.grupo-td-addr {
+  font-size: 12px;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Badge "sobreescribe" en modal ── */
+.agrupado-aprox-badge {
+  font-size: 10px;
+  color: #F59E0B;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+/* ── Mapa grupal ── */
+#geo-grupal-map {
+  width: 100%;
+  height: 100%;
+  min-height: 280px;
+  border-radius: 6px;
+  background: #121c2b;
+}

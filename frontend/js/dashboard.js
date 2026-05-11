@@ -55,6 +55,7 @@
     document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
     Mapa.destroyGeoMap();
     Mapa.destroyViewMap();
+    if (window.GrupadoUI) window.GrupadoUI.cerrarModal();
   }
 
   // ══════════════════════════════════════════════════════════
@@ -736,6 +737,12 @@
   async function mostrarVista(vista) {
     document.getElementById('view-table').style.display = vista === 'table' ? '' : 'none';
     document.getElementById('view-fijas').style.display = vista === 'fijas' ? '' : 'none';
+    const excelEl = document.getElementById('view-excel');
+    if (excelEl) excelEl.style.display = vista === 'excel' ? '' : 'none';
+    const agrupadoEl = document.getElementById('view-agrupado');
+    if (agrupadoEl) agrupadoEl.style.display = vista === 'agrupado' ? '' : 'none';
+    const sidebarStats = document.getElementById('sidebar-agrupado-stats');
+    if (sidebarStats) sidebarStats.style.display = vista === 'agrupado' ? '' : 'none';
     if (vista === 'fijas' && !state.fijasLoaded) {
       await DireccionesFijas.cargar();
       DireccionesFijas.renderTabla();
@@ -960,7 +967,9 @@
     openGeoModal,
     openViewModal,
     toggleSelect,
-    goPage
+    goPage,
+    getAllDirecciones: () => state.allDirecciones,
+    recargar: () => cargarDirecciones(false),
   };
 
   // ══════════════════════════════════════════════════════════
