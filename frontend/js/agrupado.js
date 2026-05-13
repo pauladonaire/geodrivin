@@ -88,6 +88,7 @@ window.GrupadoModule = GrupadoModule;
   let _grupoActual    = null;
   let _seleccion      = new Set();
   let _coordsActuales = null;
+  let _fijaActual     = null; // address override cuando se selecciona una dirección fija
   let _grupalMap      = null;
   let _grupalMarker   = null;
 
@@ -315,6 +316,7 @@ window.GrupadoModule = GrupadoModule;
                         ? checkedCodes
                         : new Set(grupo.items.map(d => d.code));
     _coordsActuales = null;
+    _fijaActual     = null;
     closeFijasPicker();
 
     const titleEl = document.getElementById('modal-geo-grupal-title');
@@ -436,6 +438,7 @@ window.GrupadoModule = GrupadoModule;
   function bindGrupalMarker(marker) {
     marker.on('dragend', () => {
       const pos = marker.getLatLng();
+      _fijaActual = null;
       updateGrupalCoordDisplay(pos.lat, pos.lng, 'Manual');
       _coordsActuales = { lat: pos.lat, lng: pos.lng };
       const btn = document.getElementById('btn-grupal-ver-resumen');
@@ -443,7 +446,8 @@ window.GrupadoModule = GrupadoModule;
     });
   }
 
-  function setGrupalPin(lat, lng, precision) {
+  function setGrupalPin(lat, lng, precision, addressOverride = null) {
+    _fijaActual = addressOverride;
     if (!_grupalMap) return;
     if (_grupalMarker) {
       _grupalMarker.setLatLng([lat, lng]);
@@ -526,7 +530,10 @@ window.GrupadoModule = GrupadoModule;
       el.addEventListener('mouseleave', () => { el.style.background = ''; el.style.borderColor = 'var(--border-color)'; });
       el.addEventListener('click', () => {
         if (f.lat == null || f.lng == null) { Toast.warning('Esta fija no tiene coordenadas'); return; }
-        setGrupalPin(f.lat, f.lng, 'Alta');
+        const addrOverride = (f.address1 || f.city)
+          ? { address1: f.address1, city: f.city }
+          : null;
+        setGrupalPin(f.lat, f.lng, 'Alta', addrOverride);
         DireccionesFijas.registrarUso(f.id).catch(() => {});
         closeFijasPicker();
       });
@@ -644,7 +651,8 @@ window.GrupadoModule = GrupadoModule;
     for (let i = 0; i < selItems.length; i += BATCH) {
       const batch    = selItems.slice(i, i + BATCH);
       const payloads = batch.map(d => {
-        const p   = Drivin.buildPayload(d, lat, lng, 'mapbox');
+        const p   = Drivin.buildPayload(d, lat, lng, 'mapbox', _fijaActual);
+        p._tipo   = _fijaActual ? 'fija' : 'eventual';
         p._metodo = 'grupal';
         return p;
       });
@@ -681,6 +689,7 @@ window.GrupadoModule = GrupadoModule;
     _grupoActual    = null;
     _seleccion      = new Set();
     _coordsActuales = null;
+    _fijaActual     = null;
     setGrupalStep(1);
   }
 
