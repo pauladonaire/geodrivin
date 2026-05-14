@@ -530,10 +530,7 @@ window.GrupadoModule = GrupadoModule;
       el.addEventListener('mouseleave', () => { el.style.background = ''; el.style.borderColor = 'var(--border-color)'; });
       el.addEventListener('click', () => {
         if (f.lat == null || f.lng == null) { Toast.warning('Esta fija no tiene coordenadas'); return; }
-        const addrOverride = (f.address1 || f.city)
-          ? { address1: f.address1, city: f.city }
-          : null;
-        setGrupalPin(f.lat, f.lng, 'Alta', addrOverride);
+        setGrupalPin(f.lat, f.lng, 'Alta', f);
         DireccionesFijas.registrarUso(f.id).catch(() => {});
         closeFijasPicker();
       });
@@ -603,6 +600,10 @@ window.GrupadoModule = GrupadoModule;
       tbody.innerHTML = _grupoActual.items.map(d => {
         const incluido  = _seleccion.has(d.code);
         const rowStyle  = incluido ? '' : 'opacity:0.4; text-decoration:line-through;';
+        // Dirección efectiva que se va a enviar (fija override si corresponde)
+        const effectiveAddr1 = (_fijaActual?.address1) || d.address1;
+        const effectiveCity  = (_fijaActual?.city)      || d.city;
+        const addrChanged    = !!_fijaActual && incluido && (effectiveAddr1 !== d.address1 || effectiveCity !== d.city);
         let accion;
         if (!incluido) {
           accion = '<span class="status-badge status-sin-asignar">EXCLUIDA</span>';
@@ -611,11 +612,14 @@ window.GrupadoModule = GrupadoModule;
         } else {
           accion = '<span class="status-badge status-corregida">→ se actualiza</span>';
         }
+        const addrStyle = addrChanged
+          ? 'font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--cyan);'
+          : 'font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
         return `
           <tr style="${rowStyle}">
             <td style="font-family:monospace;font-size:11px;">${esc(d.code)}</td>
-            <td style="font-size:12px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(d.address1 || '—')}</td>
-            <td style="font-size:12px;">${esc(d.city || '—')}</td>
+            <td style="${addrStyle}" title="${esc(effectiveAddr1)}">${esc(effectiveAddr1 || '—')}</td>
+            <td style="font-size:12px;${addrChanged ? 'color:var(--cyan);' : ''}">${esc(effectiveCity || '—')}</td>
             <td>${accion}</td>
           </tr>
         `;
@@ -625,9 +629,15 @@ window.GrupadoModule = GrupadoModule;
     const n       = [..._seleccion].filter(c => _grupoActual.items.some(d => d.code === c)).length;
     const titleEl = document.getElementById('grupal-preview-title');
     if (titleEl) {
+      const fijaLabel = _fijaActual
+        ? [_fijaActual.nombre_referencia, _fijaActual.address1, _fijaActual.city].filter(Boolean).join(' — ')
+        : '';
+      const fijaInfo = _fijaActual
+        ? `&nbsp;&mdash;&nbsp;<span style="color:var(--cyan);font-size:12px;" title="${esc(fijaLabel)}">★ Fija: ${esc(_fijaActual.nombre_referencia || fijaLabel || '(sin nombre)')}</span>`
+        : '';
       titleEl.innerHTML = `
         Vas a georreferenciar <strong>${n}</strong> dirección${n !== 1 ? 'es' : ''} con:
-        &nbsp; <span style="font-family:monospace;color:var(--cyan);">LAT&nbsp;${parseFloat(lat).toFixed(7)}&nbsp;&nbsp;LNG&nbsp;${parseFloat(lng).toFixed(7)}</span>
+        &nbsp; <span style="font-family:monospace;color:var(--cyan);">LAT&nbsp;${parseFloat(lat).toFixed(7)}&nbsp;&nbsp;LNG&nbsp;${parseFloat(lng).toFixed(7)}</span>${fijaInfo}
       `;
     }
 
@@ -650,8 +660,11 @@ window.GrupadoModule = GrupadoModule;
 
     for (let i = 0; i < selItems.length; i += BATCH) {
       const batch    = selItems.slice(i, i + BATCH);
+      const newAddress = _fijaActual
+        ? { address1: _fijaActual.address1 || null, city: _fijaActual.city || null, zip_code: _fijaActual.zip_code || null }
+        : null;
       const payloads = batch.map(d => {
-        const p   = Drivin.buildPayload(d, lat, lng, 'mapbox', _fijaActual);
+        const p   = Drivin.buildPayload(d, lat, lng, 'mapbox', newAddress);
         p._tipo   = _fijaActual ? 'fija' : 'eventual';
         p._metodo = 'grupal';
         return p;

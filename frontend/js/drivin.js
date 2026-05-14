@@ -379,7 +379,7 @@ const Drivin = (() => {
       city:          newAddress?.city      || direccion.city        || null,
       state:         direccion.state       || null,
       country:       direccion.country     || 'Argentina',
-      zip_code:      direccion.zip_code    || null,
+      zip_code:      newAddress?.zip_code  || direccion.zip_code    || null,
       lat:           parseFloat(lat),
       lng:           parseFloat(lng),
       name:          direccion.name        || null,
