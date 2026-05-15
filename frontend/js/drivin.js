@@ -346,17 +346,23 @@ const Drivin = (() => {
     return { depositos: deps, sin_asignar: sinAsignar };
   }
 
-  async function getEstadisticas() {
+  async function getEstadisticas(depositoId = null) {
     const user  = Auth.getUser();
     let cache   = getCache();
 
-    if (user.rol !== 'admin') {
+    if (depositoId && depositoId !== 'all') {
+      cache = cache.filter(c => c.deposito_id === depositoId);
+    } else if (user.rol !== 'admin') {
       cache = cache.filter(c => c.deposito_id === user.deposito_id);
     }
 
     const today = new Date().toISOString().split('T')[0];
     const corregidas = getCorregidas().filter(c => {
-      if (user.rol !== 'admin' && c.deposito_id !== user.deposito_id) return false;
+      if (depositoId && depositoId !== 'all') {
+        if (c.deposito_id !== depositoId) return false;
+      } else if (user.rol !== 'admin' && c.deposito_id !== user.deposito_id) {
+        return false;
+      }
       return c.fecha_correccion?.startsWith(today);
     });
 

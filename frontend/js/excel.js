@@ -237,6 +237,41 @@ window.ExcelModule = ExcelModule;
     };
     sel.addEventListener('change', actualizar);
     actualizar();
+
+    const btnPlantilla = document.getElementById('btn-excel-descargar-plantilla');
+    if (btnPlantilla) {
+      btnPlantilla.addEventListener('click', () => descargarPlantilla(sel.value));
+    }
+  }
+
+  // ── Plantilla descargable ──
+  function descargarPlantilla(formatoKey) {
+    if (!window.XLSX) { Toast.warning('Librería XLSX no disponible. Recargá la página.'); return; }
+    const formato = FORMATOS_EXCEL[formatoKey];
+    if (!formato) return;
+
+    const wb = XLSX.utils.book_new();
+
+    // Fila de encabezado + fila de ejemplo para cada hoja activa
+    const headers = [formato.col_numero, formato.col_email, formato.col_lat, formato.col_lng];
+    const ejemplo = [
+      '12345678',
+      'destinatario@ejemplo.com',
+      -329809081,   // = -32.9809081 (Mendoza capital aprox.)
+      -688413000,   // = -68.8413000
+    ];
+
+    for (const hoja of formato.hojas_activas) {
+      const ws = XLSX.utils.aoa_to_sheet([headers, ejemplo]);
+
+      // Ancho de columnas orientativo
+      ws['!cols'] = [{ wch: 14 }, { wch: 28 }, { wch: 14 }, { wch: 14 }];
+
+      XLSX.utils.book_append_sheet(wb, ws, hoja);
+    }
+
+    const nombreArchivo = `plantilla_${formatoKey.toLowerCase()}.xlsx`;
+    XLSX.writeFile(wb, nombreArchivo);
   }
 
   // ── Dropzone ──

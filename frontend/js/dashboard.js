@@ -91,7 +91,7 @@
 
   async function actualizarMetricas() {
     try {
-      const stats = await Drivin.getEstadisticas();
+      const stats = await Drivin.getEstadisticas(state.depositoActivo);
       document.getElementById('metric-total').textContent      = fmt(stats.total_cache);
       document.getElementById('metric-aprox').textContent      = fmt(stats.coords_aprox);
       document.getElementById('metric-sin-coords').textContent = fmt(stats.sin_coords);
@@ -134,8 +134,11 @@
     const container = document.getElementById('depositos-list');
     container.innerHTML = '';
 
+    const totalAll = depositos.reduce((sum, d) => sum + (d.stats?.total || 0), 0)
+                   + (sinAsignar?.stats?.total || 0);
+
     const todos = [
-      ...(user.rol === 'admin' ? [{ id: 'all', nombre: 'Todos los depósitos', color: '#01feff', stats: {} }] : []),
+      ...(user.rol === 'admin' ? [{ id: 'all', nombre: 'Todos los depósitos', color: '#01feff', stats: { total: totalAll } }] : []),
       ...depositos,
       sinAsignar
     ].filter(Boolean);
@@ -976,7 +979,30 @@
   //  INICIALIZAR
   // ══════════════════════════════════════════════════════════
 
+  // ══════════════════════════════════════════════════════════
+  //  AUTO-REFRESH A MEDIANOCHE
+  // ══════════════════════════════════════════════════════════
+
+  function programarRefreshMedianoche() {
+    const ahora       = new Date();
+    const medianoche  = new Date(ahora);
+    medianoche.setHours(24, 0, 30, 0); // 00:00:30 del día siguiente (margen de 30s)
+    const msPara = medianoche.getTime() - ahora.getTime();
+
+    setTimeout(async () => {
+      try {
+        await Drivin.fetchFromDrivin();
+        await actualizarMetricas();
+        aplicarFiltros();
+        await cargarDepositos();
+        poblarFiltroClientes();
+      } catch { /* silencioso — no interrumpir al usuario */ }
+      programarRefreshMedianoche(); // programar el siguiente día
+    }, msPara);
+  }
+
   updateSortHeaders();
   await cargarDirecciones(false);
+  programarRefreshMedianoche();
 
 })();
