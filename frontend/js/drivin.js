@@ -122,43 +122,10 @@ function addCorregida(item) {
 
 const Drivin = (() => {
 
-  async function fetchFromDrivin() {
+  // Procesamiento común: raw addresses[] → _memCache
+  async function _procesarDirecciones(allAddresses) {
     const depositos = await getDepositosConfig();
 
-    // Paginar hasta traer todas las direcciones (la API devuelve 1000 por página)
-    const PER_PAGE  = 1000;
-    const MAX_PAGES = 30;
-    let allAddresses = [];
-    const seenCodes  = new Set();
-
-    for (let page = 1; page <= MAX_PAGES; page++) {
-      const r = await fetch(
-        `${DRIVIN_BASE_URL}/addresses?georeferenced=0&page=${page}&per_page=${PER_PAGE}`,
-        { headers: { 'X-API-Key': DRIVIN_API_KEY } }
-      );
-      if (!r.ok) throw new Error(`Error ${r.status} al consultar Driv.in`);
-
-      const data  = await r.json();
-      const batch = Array.isArray(data) ? data : (data.response || data.addresses || data.data || []);
-
-      if (!batch.length) break;
-
-      // DEBUG temporal: ver campos del primer objeto de la API
-      if (page === 1 && batch.length > 0) {
-        console.log('[Drivin DEBUG] Primer address recibido:', batch[0]);
-        console.log('[Drivin DEBUG] Campos disponibles:', Object.keys(batch[0]));
-      }
-
-      // Detectar si la API no soporta paginación (devuelve siempre los mismos registros)
-      const newItems = batch.filter(a => !seenCodes.has(a.code));
-      if (!newItems.length) break;
-      batch.forEach(a => seenCodes.add(a.code));
-      allAddresses = allAddresses.concat(batch);
-
-      if (batch.length < PER_PAGE) break; // última página
-    }
-
-    // ── Cargar y registrar fechas de ingreso en Sheet ────────
     let pendientesMap = new Map();
     try {
       const allCodes = allAddresses.map(a => a.code).filter(Boolean);
@@ -175,13 +142,9 @@ const Drivin = (() => {
       const depositoId = asignarDeposito(addr, depositos);
 
       let estado;
-      if (corregidas.has(addr.code)) {
-        estado = 'corregida';
-      } else if (addr.lat && addr.lng) {
-        estado = 'coords_aprox';
-      } else {
-        estado = 'sin_coords';
-      }
+      if (corregidas.has(addr.code))  estado = 'corregida';
+      else if (addr.lat && addr.lng)  estado = 'coords_aprox';
+      else                            estado = 'sin_coords';
 
       newCache.push({
         code: addr.code,
@@ -212,7 +175,66 @@ const Drivin = (() => {
     }
 
     setCache(newCache);
+    localStorage.setItem('andesmar_last_fetch', new Date().toISOString().split('T')[0]);
     return { ok: true, total: allAddresses.length };
+  }
+
+  async function fetchFromDrivin() {
+    const PER_PAGE  = 1000;
+    const MAX_PAGES = 30;
+    let allAddresses = [];
+    const seenCodes  = new Set();
+
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const r = await fetch(
+        `${DRIVIN_BASE_URL}/addresses?georeferenced=0&page=${page}&per_page=${PER_PAGE}`,
+        { headers: { 'X-API-Key': DRIVIN_API_KEY } }
+      );
+      if (!r.ok) throw new Error(`Error ${r.status} al consultar Driv.in`);
+
+      const data  = await r.json();
+      const batch = Array.isArray(data) ? data : (data.response || data.addresses || data.data || []);
+
+      if (!batch.length) break;
+
+      const newItems = batch.filter(a => !seenCodes.has(a.code));
+      if (!newItems.length) break;
+      batch.forEach(a => seenCodes.add(a.code));
+      allAddresses = allAddresses.concat(newItems);
+
+      if (batch.length < PER_PAGE) break;
+    }
+
+    return _procesarDirecciones(allAddresses);
+  }
+
+  // Lee el cache pre-cargado por el trigger GAS y lo procesa igual que fetchFromDrivin
+  async function cargarDesdeGasCache() {
+    const url = (typeof CONFIG !== 'undefined') ? CONFIG.APPS_SCRIPT_URL : null;
+    if (!url) return { ok: false, error: 'Sin URL de GAS' };
+
+    const r = await fetch(url + '?action=cache');
+    if (!r.ok) return { ok: false, error: 'HTTP ' + r.status };
+
+    const data = await r.json();
+    if (!data.ok || !Array.isArray(data.addresses) || !data.addresses.length) {
+      return { ok: false, error: data.error || 'Cache vacío' };
+    }
+
+    // Validar que el cache sea de hoy (el trigger corre después de medianoche)
+    const cacheDate = data.fetched_at?.split('T')[0];
+    const today     = new Date().toISOString().split('T')[0];
+    if (cacheDate !== today) return { ok: false, error: 'Cache de un día anterior' };
+
+    return _procesarDirecciones(data.addresses);
+  }
+
+  // Verdadero si el cache está vacío o el último fetch fue en un día distinto al de hoy
+  function needsFetch() {
+    if (getCache().length === 0) return true;
+    const lastDate = localStorage.getItem('andesmar_last_fetch');
+    const today    = new Date().toISOString().split('T')[0];
+    return !lastDate || lastDate !== today;
   }
 
   async function getDirecciones(params = {}) {
@@ -412,7 +434,7 @@ const Drivin = (() => {
     };
   }
 
-  return { fetchFromDrivin, getDirecciones, enviar, getDepositos, getEstadisticas, buildPayload };
+  return { fetchFromDrivin, cargarDesdeGasCache, needsFetch, getDirecciones, enviar, getDepositos, getEstadisticas, buildPayload };
 })();
 
 window.Drivin = Drivin;

@@ -22,8 +22,8 @@ const GrupadoModule = (() => {
 
       let key, display;
       if (modo === 'destinatario') {
-        key     = normGrupo(d.name || '');
-        display = d.name || '(sin nombre)';
+        key     = normGrupo(d.client || '');
+        display = d.client || '(sin cliente)';
       } else {
         key     = normGrupo(d.address1 || '') + '||' + normGrupo(d.city || '');
         display = [d.address1, d.city].filter(Boolean).join(', ') || '(sin dirección)';
@@ -67,7 +67,7 @@ const GrupadoModule = (() => {
         normGrupo(String(d.code   || '')).includes(qn) ||
         normGrupo(d.address1 || '').includes(qn)       ||
         normGrupo(d.city     || '').includes(qn)       ||
-        normGrupo(d.name     || '').includes(qn)
+        normGrupo(d.client   || '').includes(qn)
       )
     );
   }
@@ -236,6 +236,7 @@ window.GrupadoModule = GrupadoModule;
                 <th>C&oacute;digo</th>
                 <th>Direcci&oacute;n</th>
                 <th>Ciudad</th>
+                <th>Cliente</th>
                 <th>Estado</th>
               </tr>
             </thead>
@@ -248,6 +249,7 @@ window.GrupadoModule = GrupadoModule;
                   <td style="font-family:monospace;font-size:11px;">${esc(d.code)}</td>
                   <td class="grupo-td-addr" title="${esc(d.address1)}">${esc(d.address1 || '—')}</td>
                   <td style="font-size:12px;">${esc(d.city || '—')}</td>
+                  <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(d.client)}">${esc(d.client || '—')}</td>
                   <td>${estadoBadge(d.estado)}</td>
                 </tr>
               `).join('')}
@@ -554,6 +556,7 @@ window.GrupadoModule = GrupadoModule;
           <td style="font-family:monospace;font-size:11px;">${esc(d.code)}</td>
           <td style="font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(d.address1)}">${esc(d.address1 || '—')}</td>
           <td style="font-size:12px;">${esc(d.city || '—')}</td>
+          <td style="font-size:12px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${esc(d.client)}">${esc(d.client || '—')}</td>
           <td>${estadoBadge(d.estado)}${hasAprox ? ' <span class="agrupado-aprox-badge">↻ sobreescribe</span>' : ''}</td>
         </tr>
       `;

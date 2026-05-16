@@ -70,6 +70,13 @@
         await Drivin.fetchFromDrivin();
         Toast.remove(toast);
         Toast.info('Datos actualizados desde Driv.in', 'Actualizado');
+      } else if (Drivin.needsFetch()) {
+        // Cache vacío o de un día anterior: intentar primero el cache del trigger GAS
+        const gasResult = await Drivin.cargarDesdeGasCache().catch(() => ({ ok: false }));
+        if (!gasResult.ok) {
+          // GAS cache no disponible o desactualizado: fetch directo a Driv.in
+          await Drivin.fetchFromDrivin();
+        }
       }
 
       const data = await Drivin.getDirecciones({
@@ -979,30 +986,7 @@
   //  INICIALIZAR
   // ══════════════════════════════════════════════════════════
 
-  // ══════════════════════════════════════════════════════════
-  //  AUTO-REFRESH A MEDIANOCHE
-  // ══════════════════════════════════════════════════════════
-
-  function programarRefreshMedianoche() {
-    const ahora       = new Date();
-    const medianoche  = new Date(ahora);
-    medianoche.setHours(24, 0, 30, 0); // 00:00:30 del día siguiente (margen de 30s)
-    const msPara = medianoche.getTime() - ahora.getTime();
-
-    setTimeout(async () => {
-      try {
-        await Drivin.fetchFromDrivin();
-        await actualizarMetricas();
-        aplicarFiltros();
-        await cargarDepositos();
-        poblarFiltroClientes();
-      } catch { /* silencioso — no interrumpir al usuario */ }
-      programarRefreshMedianoche(); // programar el siguiente día
-    }, msPara);
-  }
-
   updateSortHeaders();
   await cargarDirecciones(false);
-  programarRefreshMedianoche();
 
 })();
